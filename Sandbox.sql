@@ -1,8 +1,8 @@
 -- ระบบฐานข้อมูลใบเสนอราคาซื้อขายวัตถุดิบอาหารโอมากาเซะ
 -- ออกแบบโดยเน้นความเรียบง่ายและประสิทธิภาพ
-
-create database omakaseEiei;
-use omakaseEiei;
+-- localhost:8080/operator/supOrderList
+create database sandbox;
+use sandbox;
 
 -- drop database omakaseEiei; 
 
