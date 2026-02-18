@@ -26,9 +26,4 @@ public class PageDTO<T> {
     public Integer getPage() {
         return number;
     }
-
-
-//    public void setSort(String sort) {
-//        this.sort = "Hello eiei";
-//    }
 }

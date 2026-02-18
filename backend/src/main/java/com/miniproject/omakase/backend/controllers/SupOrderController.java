@@ -38,9 +38,4 @@ public class SupOrderController {
         return ResponseEntity.ok("Excel created at: " + path);
     }
 
-//    @GetMapping("/api/excel")
-//    public ResponseEntity<List<SupOrderDTO>> AllSupplierOrdersExcel() {
-//
-//    }
-
 }

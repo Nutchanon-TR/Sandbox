@@ -1,28 +1,22 @@
-#  https://platform.openai.com/docs/quickstart?desktop-os=windows
 spring:
   application:
     name: backend
-
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost/sandbox
-    username: root
-    password: ${DB_PASSWORD}
-
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://${AZURE_DB_HOST}.database.windows.net:1433;database=${AZURE_DB_NAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+    username: ${AZURE_DB_USERNAME}
+    password: ${AZURE_DB_PASSWORD}
   data:
     jdbc:
       dialect: mysql
-
   jpa:
     hibernate:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-
 server:
   error:
     include-stacktrace: on_param
     include-exception: true
-
 app:
   cors:
     allowedOrigins:
