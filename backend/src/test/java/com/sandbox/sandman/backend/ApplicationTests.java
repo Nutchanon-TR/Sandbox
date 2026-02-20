@@ -1,10 +1,10 @@
-package com.miniproject.omakase.backend;
+package com.sandbox.sandman.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class BackendApplicationTests {
+class ApplicationTests {
 
 	@Test
 	void contextLoads() {

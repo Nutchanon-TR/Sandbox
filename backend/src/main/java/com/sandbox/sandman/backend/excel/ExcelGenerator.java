@@ -1,4 +1,4 @@
-package com.miniproject.omakase.backend.excel;
+package com.sandbox.sandman.backend.excel;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;

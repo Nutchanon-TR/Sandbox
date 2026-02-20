@@ -1,7 +1,7 @@
-package com.miniproject.omakase.backend.services;
+package com.sandbox.sandman.backend.services;
 
-import com.miniproject.omakase.backend.DTO.SupOrderDTO;
-import com.miniproject.omakase.backend.repositories.SupOrderRepository;
+import com.sandbox.sandman.backend.DTO.SupOrderDTO;
+import com.sandbox.sandman.backend.repositories.SupOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

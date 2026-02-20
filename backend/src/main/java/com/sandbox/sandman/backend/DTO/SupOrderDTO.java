@@ -1,4 +1,4 @@
-package com.miniproject.omakase.backend.DTO;
+package com.sandbox.sandman.backend.DTO;
 
 import lombok.*;
 
