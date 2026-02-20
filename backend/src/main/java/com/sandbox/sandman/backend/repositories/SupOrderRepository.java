@@ -1,6 +1,6 @@
-package com.miniproject.omakase.backend.repositories;
+package com.sandbox.sandman.backend.repositories;
 
-import com.miniproject.omakase.backend.DTO.SupOrderDTO;
+import com.sandbox.sandman.backend.DTO.SupOrderDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,20 +22,6 @@ public class SupOrderRepository {
             JOIN orders AS o ON s.supplier_id = o.supplier_id
             ORDER BY o.order_date DESC
             """;
-
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(SupOrderDTO.class));
     }
-
-//    public List<SupOrderDTO> findSupplierOrdersItemById(int orderId) {
-//        String sql = """
-//                SELECT
-//                  oi.item_id,
-//                  c.category_name,
-//                  i.ingredient_name
-//                FROM order_items AS oi
-//                JOIN ingredients AS i ON oi.ingredient_id = i.ingredient_id
-//                JOIN categories AS c ON i.category_id = c.category_id
-//                WHERE oi.order_id LIKE '1';""";
-//        return jdbcTemplate.query();
-//    }
 }

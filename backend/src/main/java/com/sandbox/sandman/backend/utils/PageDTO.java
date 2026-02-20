@@ -1,4 +1,4 @@
-package com.miniproject.omakase.backend.utils;
+package com.sandbox.sandman.backend.utils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;

@@ -1,26 +1,35 @@
 spring:
   application:
     name: backend
+  cloud:
+    azure:
+      storage:
+        blob:
+          connection-string: ${ AZURE_STORAGE_ACCOUNT }
   datasource:
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     url: jdbc:sqlserver://${AZURE_DB_HOST}.database.windows.net:1433;database=${AZURE_DB_NAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
     username: ${AZURE_DB_USERNAME}
     password: ${AZURE_DB_PASSWORD}
-  data:
-    jdbc:
-      dialect: mysql
+
   jpa:
+    # เปลี่ยน Dialect ให้เป็น SQL Server
+    database-platform: org.hibernate.dialect.SQLServerDialect
     hibernate:
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: validate # แนะนำให้ใช้ validate เพื่อตรวจสอบว่า Entity ตรงกับตารางใน Azure หรือไม่
+    show-sql: true # เปิดไว้เพื่อดู SQL ที่รันจริงใน Console (ช่วย Debug ได้ดีมาก)
+
 server:
   error:
     include-stacktrace: on_param
     include-exception: true
+
 app:
   cors:
     allowedOrigins:
-      - http://localhost
       - http://localhost:5173
-      - http://localhost:4173
-      - http://localhost:8080
+      - http://localhost:8080 # เพิ่มเผื่อกรณีคุณรัน Frontend port อื่นๆ
+  api:
+    prefix:
+      report: v1/api/report
+
