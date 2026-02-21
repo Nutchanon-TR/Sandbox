@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
 
@@ -40,10 +41,12 @@ public class OrderItem {
     private BigDecimal totalPrice;
 
     @Size(max = 20)
+    @Nationalized
     @Column(name = "quality_grade", length = 20)
     private String qualityGrade;
 
     @Size(max = 50)
+    @Nationalized
     @Column(name = "origin", length = 50)
     private String origin;
 

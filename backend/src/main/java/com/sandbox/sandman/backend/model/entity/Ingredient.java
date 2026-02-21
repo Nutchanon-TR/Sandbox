@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Nationalized;
 
 @Getter
 @Setter
@@ -17,6 +18,7 @@ public class Ingredient {
 
     @Size(max = 100)
     @NotNull
+    @Nationalized
     @Column(name = "ingredient_name", nullable = false, length = 100)
     private String ingredientName;
 
@@ -27,9 +29,11 @@ public class Ingredient {
 
     @Size(max = 20)
     @NotNull
+    @Nationalized
     @Column(name = "unit", nullable = false, length = 20)
     private String unit;
 
+    @Nationalized
     @Lob
     @Column(name = "description")
     private String description;
