@@ -1,12 +1,10 @@
 import axios from 'axios';
 
-// สร้าง instance ของ axios
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://jsonplaceholder.typicode.com', // ตัวอย่าง URL
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    sourceSystem: process.env.SOURCE_SYSTEM_NAME || 'FRONTEND',
   },
-  timeout: 10000, // รอ response นานสุด 10 วินาที
 });
 
 // (Optional) เพิ่ม Interceptors สำหรับจัดการ Request/Response
