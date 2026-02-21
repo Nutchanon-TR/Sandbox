@@ -1,4 +1,4 @@
-package com.sandbox.sandman.backend.DTO;
+package com.sandbox.sandman.backend.model.dto;
 
 import lombok.*;
 
@@ -7,7 +7,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SupOrderDTO {
+public class SupplierOrderDTO {
     private Integer orderId;
     private String supplierName;
     private String contactPerson;

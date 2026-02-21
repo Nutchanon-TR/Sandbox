@@ -32,4 +32,5 @@ app:
   api:
     prefix:
       report: v1/api/report
+      supplier-order: v1/api/supplier-order
 
