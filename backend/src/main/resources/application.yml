@@ -11,13 +11,14 @@ spring:
     url: jdbc:sqlserver://${AZURE_DB_HOST}.database.windows.net:1433;database=${AZURE_DB_NAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
     username: ${AZURE_DB_USERNAME}
     password: ${AZURE_DB_PASSWORD}
-
   jpa:
-    # เปลี่ยน Dialect ให้เป็น SQL Server
-    database-platform: org.hibernate.dialect.SQLServerDialect
     hibernate:
-      ddl-auto: validate # แนะนำให้ใช้ validate เพื่อตรวจสอบว่า Entity ตรงกับตารางใน Azure หรือไม่
-    show-sql: true # เปิดไว้เพื่อดู SQL ที่รันจริงใน Console (ช่วย Debug ได้ดีมาก)
+      ddl-auto: none # เปลี่ยนเป็น none หรือ ลบออกหากเป็นที่ SIT, UAT, PROD
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.SQLServerDialect
 
 server:
   error:
