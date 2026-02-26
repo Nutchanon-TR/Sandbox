@@ -8,7 +8,7 @@ spring:
           connection-string: ${AZURE_STORAGE_ACCOUNT}
   datasource:
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://${AZURE_DB_HOST}.database.windows.net:1433;database=${AZURE_DB_NAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+    url: jdbc:sqlserver://${AZURE_DB_HOST}.database.windows.net:1433;database=${AZURE_DB_NAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=60;
     username: ${AZURE_DB_USERNAME}
     password: ${AZURE_DB_PASSWORD}
   jpa:

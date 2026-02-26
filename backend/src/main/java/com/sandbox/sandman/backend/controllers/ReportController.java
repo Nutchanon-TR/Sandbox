@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@RestController
 @RequestMapping("${app.api.prefix.report}")
 @Slf4j
 public class ReportController {

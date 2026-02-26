@@ -1,4 +1,4 @@
-package th.co.scb.cap.cap_corporate_report_api.model.common;
+package com.sandbox.sandman.backend.model.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,7 +1,9 @@
 package com.sandbox.sandman.backend.controllers;
 
+import com.sandbox.sandman.backend.model.common.PageResponse;
+import com.sandbox.sandman.backend.model.common.PaginationRequest;
 import lombok.extern.slf4j.Slf4j;
-import com.sandbox.sandman.backend.model.dto.SupplierOrderDTO;
+import com.sandbox.sandman.backend.model.dto.SupplierOrderDto;
 import com.sandbox.sandman.backend.services.SupplierOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +20,7 @@ public class SupplierOrderController {
     private SupplierOrderService supplierOrderService;
 
     @GetMapping("/inquiry")
-    public ResponseEntity<List<SupplierOrderDTO>> AllSupplierOrders() {
-        return ResponseEntity.ok(supplierOrderService.getAllSupplierOrders());
+    public ResponseEntity<PageResponse<SupplierOrderDto>> AllSupplierOrders(PaginationRequest req) {
+        return ResponseEntity.ok(supplierOrderService.getAllSupplierOrders(req));
     }
 }

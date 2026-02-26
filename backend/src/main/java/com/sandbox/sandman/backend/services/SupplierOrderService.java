@@ -1,13 +1,13 @@
 package com.sandbox.sandman.backend.services;
 
-import com.sandbox.sandman.backend.model.dto.SupplierOrderDTO;
-import com.sandbox.sandman.backend.repositories.SupplierOrderRepository;
+import com.sandbox.sandman.backend.model.common.PageResponse;
+import com.sandbox.sandman.backend.model.common.PaginationRequest;
+import com.sandbox.sandman.backend.model.dto.SupplierOrderDto;
 import com.sandbox.sandman.backend.repositories.SupplierRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @Slf4j
@@ -15,9 +15,9 @@ public class SupplierOrderService {
 @Autowired
     private SupplierRepository supplierRepository;
 
-    public List<SupplierOrderDTO> getAllSupplierOrders() {
+    public PageResponse<SupplierOrderDto> getAllSupplierOrders(PaginationRequest req) {
         log.info("Process inquiry");
-        return supplierRepository.findSupplierOrder();
+        Page<SupplierOrderDto> page = supplierRepository.findSupplierOrder(req.toPageable());
+        return PageResponse.toPageResponse(page);
     }
-
 }
