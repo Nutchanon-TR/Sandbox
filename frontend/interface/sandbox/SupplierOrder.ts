@@ -1,4 +1,4 @@
-export interface SupOrder {
+export interface SupplierOrder {
   orderId: number;
   supplierName: string;
   contactPerson: string;

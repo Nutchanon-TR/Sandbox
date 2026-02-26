@@ -1,5 +1,5 @@
-import api from './../app/config/axiosConfig';
-import { ApiDetail } from './../app/interface/ApiDetail';
+import api from '@/config/axiosConfig';
+import { ApiDetail } from '@/interface/common/ApiDetail';
 
 export async function apiCall<T>(apiDetail: ApiDetail, request: Record<any, any>): Promise<T> {
   const response = await api({
