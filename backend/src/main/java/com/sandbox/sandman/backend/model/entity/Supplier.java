@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Nationalized;
 
 import java.time.Instant;
 
@@ -15,17 +16,18 @@ import java.time.Instant;
 @Table(name = "suppliers")
 public class Supplier {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "supplier_id", nullable = false)
     private Integer id;
 
     @Size(max = 100)
     @NotNull
+    @Nationalized
     @Column(name = "supplier_name", nullable = false, length = 100)
     private String supplierName;
 
     @Size(max = 50)
     @NotNull
+    @Nationalized
     @Column(name = "contact_person", nullable = false, length = 50)
     private String contactPerson;
 
@@ -35,16 +37,16 @@ public class Supplier {
     private String phone;
 
     @Size(max = 100)
-    @NotNull
-    @Column(name = "email", nullable = false, length = 100)
+    @Column(name = "email", length = 100)
     private String email;
 
     @NotNull
+    @Nationalized
     @Lob
     @Column(name = "address", nullable = false)
     private String address;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
+    @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
 

@@ -2,9 +2,11 @@ package com.sandbox.sandman.backend.model.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Nationalized;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,16 +34,18 @@ public class Order {
     @Column(name = "delivery_date", nullable = false)
     private LocalDate deliveryDate;
 
+    @Size(max = 20)
+    @Nationalized
     @ColumnDefault("'pending'")
-    @Lob
-    @Column(name = "status")
+    @Column(name = "status", length = 20)
     private String status;
 
+    @Nationalized
     @Lob
     @Column(name = "notes")
     private String notes;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
+    @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
