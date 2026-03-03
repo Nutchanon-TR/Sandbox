@@ -1,6 +1,7 @@
-"use client"; // ต้องใช้ Client Component เพราะมี useState/Context
+"use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { ConfigProvider, theme as antdTheme } from "antd"; // Import ConfigProvider และ theme จาก antd
 
 interface ThemeContextType {
   theme: "light" | "dark";
@@ -18,9 +19,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <div className={theme === "dark" ? "dark-mode" : "light-mode"}>
-        {children}
-      </div>
+      {/* ใช้ ConfigProvider ควบคุม Theme ของ Ant Design ทั้งหมด */}
+      <ConfigProvider
+        theme={{
+          // สลับ Algorithm ระหว่างโหมดมืดและสว่าง
+          algorithm: theme === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+        }}
+      >
+        {/* เรายังสามารถคุมคลาสของ Tailwind ควบคู่ไปด้วยได้ เพื่อจัดการสีพื้นหลังของ Layout หลัก */}
+        <div className={`min-h-screen transition-colors duration-300 ${theme === "dark" ? "dark bg-black" : "bg-gray-50"}`}>
+          {children}
+        </div>
+      </ConfigProvider>
     </ThemeContext.Provider>
   );
 }

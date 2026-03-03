@@ -1,7 +1,7 @@
 'use client'
 
 import { fetchData } from "@/utils/api";
-import { API_SANDBOX } from "./api/ApiSandbox";
+import { API_SANDBOX } from "../constants/api/ApiSandbox";
 import { SupplierOrder } from "@/interface/sandbox/SupplierOrder";
 import { useEffect } from "react";
 

@@ -1,17 +1,17 @@
 'use client'
 import "./globals.css";
-import NavBar from "@/components/NavBar";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Sidebar from "@/components/SideBar";
+import LoadingWrapper from "@/context/LoadingContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <body>
         <ThemeProvider>
-          <NavBar />
-          <Sidebar />
-          {children}
+          <LoadingWrapper>
+            <Sidebar>{children}</Sidebar>
+          </LoadingWrapper>
         </ThemeProvider>
       </body>
     </html>
