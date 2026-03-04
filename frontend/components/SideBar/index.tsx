@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Layout, Menu, Button, theme as antdTheme } from "antd"; // Import theme จาก antd
+import { Layout, Menu, Button, theme as antdTheme, Breadcrumb } from "antd"; // Import theme จาก antd
 import {
     DesktopOutlined,
     PieChartOutlined,
@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useTheme } from "@/context/ThemeContext";
+import { useLayoutContext } from "@/context/LayoutContext";
 
 const { Header, Content, Sider } = Layout;
 
@@ -41,6 +42,7 @@ const items: MenuItem[] = [
 ];
 
 export default function Sidebar({ children }: { children: React.ReactNode }) {
+    const { breadCrumb } = useLayoutContext();
     const [collapsed, setCollapsed] = useState(false);
     const { theme, toggleTheme } = useTheme();
 
@@ -82,6 +84,12 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                         onClick={() => setCollapsed(!collapsed)}
                         className="text-lg w-12 h-12 flex items-center justify-center transition-colors duration-300"
+                    />
+
+                    <Breadcrumb
+                        items={breadCrumb}
+                        separator=">" // เปลี่ยนตัวคั่น
+                        style={{ fontSize: '16px', fontWeight: '500' }} // แต่ง Style พื้นฐาน
                     />
 
                     <Button
