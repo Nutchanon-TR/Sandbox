@@ -7,8 +7,8 @@ import { LayoutProvider } from "@/context/LayoutContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html>
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <LayoutProvider>
         <ThemeProvider>
           <LoadingWrapper>

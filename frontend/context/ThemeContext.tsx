@@ -24,9 +24,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           algorithm: theme === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         }}
       >
-        <div className={`min-h-screen transition-colors duration-300 ${theme === "dark" ? "dark bg-black" : "bg-gray-50"}`}>
           {children}
-        </div>
       </ConfigProvider>
     </ThemeContext.Provider>
   );
