@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { ConfigProvider, theme as antdTheme } from "antd";
 
 interface ThemeContextType {
@@ -13,8 +13,19 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
+  useEffect(() => {
+    const savedTheme = sessionStorage.getItem("app-theme") as "light" | "dark";
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+    setTheme((prev) => {
+      const newTheme = prev === "light" ? "dark" : "light";
+      sessionStorage.setItem("app-theme", newTheme);
+      return newTheme;
+    });
   };
 
   return (
@@ -24,7 +35,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           algorithm: theme === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         }}
       >
-          {children}
+        {children}
       </ConfigProvider>
     </ThemeContext.Provider>
   );

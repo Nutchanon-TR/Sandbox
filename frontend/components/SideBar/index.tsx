@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout, Menu, Button, theme as antdTheme, Breadcrumb } from "antd"; // Import theme จาก antd
 import {
     DesktopOutlined,
@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation";
 import type { MenuProps } from "antd";
 import { useTheme } from "@/context/ThemeContext";
 import { useLayoutContext } from "@/context/LayoutContext";
-import { SIDEBAR_MENU } from "@/constants/Title";
+import { TITLE } from "@/constants/Title";
 import { TitleDetail } from "@/interface/common/TitleDetail";
 
 const { Header, Content, Sider } = Layout;
@@ -24,26 +24,43 @@ const { Header, Content, Sider } = Layout;
 type MenuItem = Required<MenuProps>["items"][number];
 
 export default function Sidebar({ children }: { children: React.ReactNode }) {
-    const { breadCrumb } = useLayoutContext();
+    const { breadCrumb, currentTitle } = useLayoutContext();
     const [collapsed, setCollapsed] = useState(false);
+
+    useEffect(() => {
+        const savedCollapsed = sessionStorage.getItem("sidebar-collapsed");
+        if (savedCollapsed !== null) {
+            setCollapsed(JSON.parse(savedCollapsed));
+        }
+    }, []);
+
+    const handleToggleCollapse = () => {
+        setCollapsed((prev) => {
+            const newState = !prev;
+            sessionStorage.setItem("sidebar-collapsed", JSON.stringify(newState));
+            return newState;
+        });
+    };
+
     const { theme, toggleTheme } = useTheme();
     const pathname = usePathname();
+    const { setCurrentTitle } = useLayoutContext();
     const { token: { colorBgContainer, borderRadiusLG } } = antdTheme.useToken();
 
     const mapTitleDetailToMenuItem = (item: TitleDetail): MenuItem => {
-        const labelNode = item.children ? (
-            item.title
+        const labelNode = item.urlPath ? (
+            <Link href={item.urlPath} onClick={() => setCurrentTitle([item])}>{item.title}</Link>
         ) : (
-            <Link href={item.urlPath}>{item.title}</Link>
+            item.title
         );
         return {
-            key: item.key || item.urlPath,
+            key: item.key || item.urlPath || item.title,
             icon: item.icon,
             label: labelNode,
-            children: item.children ? item.children.map(mapTitleDetailToMenuItem) : undefined,
+            children: item.subTitles ? item.subTitles.map(mapTitleDetailToMenuItem) : undefined,
         } as MenuItem;
     };
-    const menuItems = SIDEBAR_MENU.map(mapTitleDetailToMenuItem);
+    const menuItems = Object.values(TITLE).map(mapTitleDetailToMenuItem);
 
     const getSelectedKeys = () => {
         let matchedKey = "";
@@ -55,17 +72,17 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                     const pathLower = pathname.toLowerCase();
                     const urlPathLower = item.urlPath.toLowerCase();
                     if (pathLower.startsWith(urlPathLower) && urlPathLower.length > maxMatchLength) {
-                        matchedKey = item.key || item.urlPath;
+                        matchedKey = item.key || item.urlPath || item.title;
                         maxMatchLength = urlPathLower.length;
                     }
                 }
-                if (item.children) {
-                    findKey(item.children);
+                if (item.subTitles) {
+                    findKey(item.subTitles);
                 }
             }
         };
-        findKey(SIDEBAR_MENU);
-        return matchedKey ? [matchedKey] : (menuItems[0]?.key ? [menuItems[0].key as string] : []);
+        findKey(Object.values(TITLE));
+        return matchedKey ? [matchedKey] : (menuItems[0]?.key ? [String(menuItems[0].key)] : []);
     };
 
     const getOpenKeys = () => {
@@ -77,12 +94,12 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                 if (item.urlPath && pathLower.includes(item.urlPath.toLowerCase())) {
                     if (parentKey) openKeys.push(parentKey);
                 }
-                if (item.children) {
-                    findOpenKey(item.children, item.key || item.urlPath);
+                if (item.subTitles) {
+                    findOpenKey(item.subTitles, item.key || item.urlPath || item.title);
                 }
             }
         };
-        findOpenKey(SIDEBAR_MENU);
+        findOpenKey(Object.values(TITLE));
         return openKeys;
     };
 
@@ -95,13 +112,27 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                 theme="light"
             >
                 <Header
-                    className="flex items-center justify-center shadow-sm"
+                    className="flex items-center justify-center relative"
                     style={{ padding: 0, background: colorBgContainer }}
                 >
-                    <div className="flex items-center space-x-2 font-bold text-lg text-primary">
-                        <CodeSandboxOutlined className="text-2xl text-blue-500" />
-                        {!collapsed && <span>SandBox</span>}
-                    </div>
+                    <a href="/">
+                        <div className={`flex items-center space-x-2 font-bold text-lg transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                            <CodeSandboxOutlined className="text-2xl" />
+                            {!collapsed && <span>SandBox</span>}
+                        </div>
+                    </a>
+                    <button
+                        onClick={handleToggleCollapse}
+                        className={`transition-all duration-300 ease-in-out transform z-50 flex items-center justify-center cursor-pointer absolute ${collapsed
+                            ? `-right-5 w-10 h-10 rounded-sm text-sm shadow-md border-none ${theme === 'dark' ? 'bg-[#141414] text-white' : 'bg-white text-black'}`
+                            : "right-0 text-sm w-12 h-12 border-none"
+                            }`}
+                        style={{
+                            border: 'none',
+                            boxShadow: 'none',
+                        }}>
+                        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                    </button>
                 </Header>
                 <Menu
                     theme="light"
@@ -109,36 +140,40 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                     defaultOpenKeys={getOpenKeys()}
                     mode="inline"
                     items={menuItems}
+                    onClick={() => {
+                        if (collapsed) {
+                            setCollapsed(false);
+                            sessionStorage.setItem("sidebar-collapsed", JSON.stringify(false));
+                        }
+                    }}
                 />
             </Sider>
 
             <Layout>
                 <Header
-                    className="px-4 shadow-sm flex items-center justify-between transition-colors duration-300"
-                    style={{ padding: 0, background: colorBgContainer }}
+                    className={`${collapsed ? 'ml-10' : 'ml-6'} shadow-sm flex items-center justify-between transition-colors duration-300`}
+                    style={{ padding: '45px 0', background: colorBgContainer, borderRadius: '10px' }}
                 >
-                    <Button
-                        type="text"
-                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                        onClick={() => setCollapsed(!collapsed)}
-                        className="text-lg w-12 h-12 flex items-center justify-center transition-colors duration-300"
-                    />
-
-                    <Breadcrumb
-                        items={breadCrumb}
-                        separator=">"
-                        style={{ fontSize: '16px', fontWeight: '500' }}
-                    />
+                    <div className="ml-6 items-center">
+                        <Breadcrumb
+                            items={breadCrumb}
+                            separator="/"
+                            style={{ fontSize: '15px', fontWeight: '500', padding: '0 0 7px 0' }}
+                        />
+                        <h2 className=" text-xl font-bold uppercase m-0 leading-none">
+                            {currentTitle.length > 0 ? currentTitle[currentTitle.length - 1].title : ""}
+                        </h2>
+                    </div>
 
                     <Button
                         type="text"
                         onClick={toggleTheme}
                         icon={theme === "light" ? <MoonOutlined /> : <SunOutlined />}
-                        className="mr-4 text-lg w-12 h-12 flex items-center justify-center transition-colors duration-300"
+                        className="mr-4 text-lg w-12 h-12 flex transition-colors duration-300"
                     />
                 </Header>
+                <Content className={`${collapsed ? 'ml-10' : 'ml-6'} my-6 flex flex-col overflow-auto`}>
 
-                <Content className="m-6 flex flex-col overflow-auto">
                     <div
                         className="p-6 flex-1 shadow-sm transition-colors duration-300"
                         style={{
