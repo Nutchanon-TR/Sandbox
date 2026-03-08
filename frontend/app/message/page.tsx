@@ -44,7 +44,7 @@ export default function MessagePage() {
                         </div>
                         <div className="mt-4">
                             <button
-                                onClick={() => signOut({ callbackUrl: '/' })}
+                                onClick={() => signOut({ callbackUrl: '/login' })}
                                 className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm active:scale-95"
                             >
                                 Logout

@@ -1,23 +1,20 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { Layout, Menu, Button, theme as antdTheme, Breadcrumb } from "antd"; // Import theme จาก antd
+import { TITLE } from "@/constants/Title";
+import { useLayoutContext } from "@/context/LayoutContext";
+import { useTheme } from "@/context/ThemeContext";
+import { TitleDetail } from "@/interface/common/TitleDetail";
 import {
-    DesktopOutlined,
-    PieChartOutlined,
-    UserOutlined,
+    CodeSandboxOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    SunOutlined,
     MoonOutlined,
-    CodeSandboxOutlined,
+    SunOutlined
 } from "@ant-design/icons";
+import type { MenuProps } from "antd";
+import { theme as antdTheme, Breadcrumb, Button, Layout, Menu } from "antd"; // Import theme จาก antd
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { MenuProps } from "antd";
-import { useTheme } from "@/context/ThemeContext";
-import { useLayoutContext } from "@/context/LayoutContext";
-import { TITLE } from "@/constants/Title";
-import { TitleDetail } from "@/interface/common/TitleDetail";
+import React, { useEffect, useState } from "react";
 
 const { Header, Content, Sider } = Layout;
 
@@ -103,6 +100,8 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         return openKeys;
     };
 
+    if (pathname === '/login') return (<> {children} </>);
+
     return (
         <Layout className="h-screen">
             <Sider
@@ -125,7 +124,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                         onClick={handleToggleCollapse}
                         className={`transition-all duration-300 ease-in-out transform z-50 flex items-center justify-center cursor-pointer absolute ${collapsed
                             ? `-right-5 w-10 h-10 rounded-sm text-sm shadow-md border-none ${theme === 'dark' ? 'bg-[#141414] text-white' : 'bg-white text-black'}`
-                            : "right-0 text-sm w-12 h-12 border-none"
+                            : "-right-2 text-sm w-12 h-12 border-none"
                             }`}
                         style={{
                             border: 'none',
