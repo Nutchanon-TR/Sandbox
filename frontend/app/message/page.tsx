@@ -92,10 +92,10 @@ export default function MessagePage() {
 
     return (
         // ปรับ Container หลักให้เลื่อน (Scroll) ได้
-        <div className="relative flex flex-col h-[calc(100vh-64px)] overflow-y-auto bg-gray-50 dark:bg-neutral-900 font-sans">
+        <div>
             
             {/* Header: ใช้ sticky top-0 */}
-            <div className="sticky top-0 z-20 flex items-center justify-between p-4 bg-white dark:bg-neutral-800 shadow-sm">
+            <div className="sticky top-6 z-20 flex items-center justify-between p-4 bg-white dark:bg-neutral-800 shadow-sm">
                 <Space size="middle">
                     <Badge dot color="green" offset={[-5, 35]}>
                         <Avatar src="/ai_avatar.png" size={42} className="bg-indigo-50 border border-indigo-100" />
@@ -117,7 +117,7 @@ export default function MessagePage() {
             </div>
 
             {/* Chat Area: ไม่ต้องเซ็ต overflow แล้ว ให้มันดันพื้นที่ไปเรื่อยๆ */}
-            <div className="flex-1 p-4 space-y-4">
+            <div className="flex-1 p-4 space-y-4 relative flex flex-col h-[calc(100vh-64px)] overflow-y-auto bg-gray-50 dark:bg-neutral-900 font-sans">
                 {messages.length === 0 && !isLoading && (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400 mt-20">
                         <Image src="/ai_avatar.png" alt="AI Avatar" width={80} height={80} className="mb-4 opacity-50" />
@@ -166,7 +166,7 @@ export default function MessagePage() {
             </div>
 
             {/* Input Area: ใช้ sticky bottom-0 */}
-            <div className="sticky bottom-0 z-20 p-4 bg-white dark:bg-neutral-800 border-t border-gray-100 dark:border-neutral-700">
+            <div className="sticky bottom-6 z-20 p-4 bg-white dark:bg-neutral-800 border-t border-gray-100 dark:border-neutral-700">
                 <div className="flex items-center gap-2 max-w-4xl mx-auto w-full">
                     <Input
                         size="large"
