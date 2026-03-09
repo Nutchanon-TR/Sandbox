@@ -32,4 +32,9 @@ export const TITLE: Record<string, TitleDetail> = {
         urlPath: "/message",
         icon: <UserOutlined />,
     },
+    PROFILE: {
+        title: "Profile",
+        urlPath: "/profile",
+        icon: <UserOutlined />,
+    },
 }

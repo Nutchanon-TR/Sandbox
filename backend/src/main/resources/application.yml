@@ -34,4 +34,8 @@ app:
     prefix:
       report: v1/api/report
       supplier-order: v1/api/supplier-order
-
+      chat: v1/api/chat
+ai:
+  api-url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+  api-key: "AIzaSyBGBdEcNnPiChK_J5QJsyTxqpYVj0r8bXk"
+  model: "gemini-2.5-flash"
