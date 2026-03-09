@@ -1,8 +1,9 @@
 // com.sandbox.sandman.backend.repositories.SupplierRepository.java
-package com.sandbox.sandman.backend.repositories;
+package com.sandbox.sandman.backend.repositories.DinnerRepository;
 
-import com.sandbox.sandman.backend.model.dto.SupplierOrderDto;
-import com.sandbox.sandman.backend.model.entity.Supplier;
+import com.sandbox.sandman.backend.model.dto.DinnerDto.SupplierOrderDto;
+import com.sandbox.sandman.backend.model.entity.DinnerEntity.Supplier;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

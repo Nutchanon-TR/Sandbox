@@ -1,5 +1,5 @@
 // com.sandbox.sandman.backend.model.dto.SupplierOrderDTO.java
-package com.sandbox.sandman.backend.model.dto;
+package com.sandbox.sandman.backend.model.dto.DinnerDto;
 
 import java.time.LocalDate;
 

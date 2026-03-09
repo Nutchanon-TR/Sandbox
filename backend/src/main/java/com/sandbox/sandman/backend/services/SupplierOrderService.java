@@ -2,8 +2,9 @@ package com.sandbox.sandman.backend.services;
 
 import com.sandbox.sandman.backend.model.common.PageResponse;
 import com.sandbox.sandman.backend.model.common.PaginationRequest;
-import com.sandbox.sandman.backend.model.dto.SupplierOrderDto;
-import com.sandbox.sandman.backend.repositories.SupplierRepository;
+import com.sandbox.sandman.backend.model.dto.DinnerDto.SupplierOrderDto;
+import com.sandbox.sandman.backend.repositories.DinnerRepository.SupplierRepository;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

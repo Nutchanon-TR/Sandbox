@@ -37,5 +37,5 @@ app:
       chat: v1/api/chat
 ai:
   api-url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-  api-key: "AIzaSyBGBdEcNnPiChK_J5QJsyTxqpYVj0r8bXk"
+  api-key: ${GEMINI_API_KEY}
   model: "gemini-2.5-flash"

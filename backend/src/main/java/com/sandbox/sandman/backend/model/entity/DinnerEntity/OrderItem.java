@@ -1,4 +1,4 @@
-package com.sandbox.sandman.backend.model.entity;
+package com.sandbox.sandman.backend.model.entity.DinnerEntity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Entity
-@Table(name = "order_items")
+@Table(name = "order_items", schema = "dinner")
 public class OrderItem {
     @Id
     @Column(name = "item_id", nullable = false)

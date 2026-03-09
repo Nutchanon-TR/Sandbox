@@ -1,4 +1,4 @@
-package com.sandbox.sandman.backend.model.entity;
+package com.sandbox.sandman.backend.model.entity.DinnerEntity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -13,7 +13,7 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
-@Table(name = "suppliers")
+@Table(name = "suppliers", schema = "dinner")
 public class Supplier {
     @Id
     @Column(name = "supplier_id", nullable = false)

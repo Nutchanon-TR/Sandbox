@@ -1,4 +1,4 @@
-package com.sandbox.sandman.backend.model.entity;
+package com.sandbox.sandman.backend.model.entity.DinnerEntity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +10,7 @@ import org.hibernate.annotations.Nationalized;
 @Getter
 @Setter
 @Entity
-@Table(name = "categories")
+@Table(name = "categories", schema = "dinner")
 public class Category {
     @Id
     @Column(name = "category_id", nullable = false)

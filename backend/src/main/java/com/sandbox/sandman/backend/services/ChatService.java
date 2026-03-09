@@ -1,6 +1,15 @@
-// backend/src/main/java/com/sandbox/sandman/backend/services/ChatService.java
 package com.sandbox.sandman.backend.services;
 
+import com.sandbox.sandman.backend.model.dto.ChatDto.ChatRequestDto;
+import com.sandbox.sandman.backend.model.dto.ChatDto.MessageDto;
+import com.sandbox.sandman.backend.model.entity.ChatEntity.Message;
+import com.sandbox.sandman.backend.model.entity.ChatEntity.Room;
+import com.sandbox.sandman.backend.model.entity.ChatEntity.User;
+import com.sandbox.sandman.backend.repositories.ChatRepository.MessageRepository;
+import com.sandbox.sandman.backend.repositories.ChatRepository.RoomRepository;
+import com.sandbox.sandman.backend.repositories.ChatRepository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -10,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -23,53 +33,107 @@ public class ChatService {
     @Value("${ai.model}")
     private String model;
 
-    public String getAiResponse(String userMessage) {
+    @Autowired
+    private MessageRepository messageRepository;
+
+    @Autowired
+    private RoomRepository roomRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private User getOrCreateAiUser() {
+        return userRepository.findByUsername("ai_assistant")
+                .orElseGet(() -> {
+                    User ai = new User();
+                    ai.setUsername("ai_assistant");
+                    ai.setEmail("ai@sandbox.local");
+                    ai.setPasswordHash("no-password");
+                    return userRepository.save(ai);
+                });
+    }
+
+    public List<MessageDto> getChatHistoryByRoom(Long roomId) {
+        return messageRepository.findByRoomIdOrderByCreatedAtAsc(roomId)
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    private MessageDto convertToDto(Message message) {
+        MessageDto dto = new MessageDto();
+        dto.setId(message.getId());
+        dto.setRoomId(message.getRoom().getId());
+        dto.setSenderId(message.getSender().getId());
+        dto.setContent(message.getContent());
+        dto.setCreatedAt(message.getCreatedAt());
+        return dto;
+    }
+
+    public String getAiResponse(ChatRequestDto request) {
+        Room room = roomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+        User user = userRepository.findById(request.getSenderId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Save User Message
+        Message userMessage = new Message();
+        userMessage.setRoom(room);
+        userMessage.setSender(user);
+        userMessage.setContent(request.getMessage());
+        messageRepository.save(userMessage);
+
         RestTemplate restTemplate = new RestTemplate();
 
-        // 1. จัดเตรียม Header (ใส่ API Key)
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
-        // 2. จัดเตรียม ข้อความ (Hardcode Context + User Message)
         List<Map<String, String>> messages = new ArrayList<>();
 
-        // --- Hardcode Context ไว้ที่นี่ ---
         Map<String, String> systemMessage = new HashMap<>();
         systemMessage.put("role", "system");
-        systemMessage.put("content", "คุณคือผู้ช่วย AI อัจฉริยะประจำโปรเจกต์ Sandbox คุณเชี่ยวชาญด้าน Software Engineering โดยเฉพาะ Java, Spring Boot, และ React/Next.js ให้ตอบคำถามแบบกระชับ ตรงประเด็น และสุภาพเสมอ");
+        systemMessage.put("content",
+                "คุณคือผู้ช่วย AI อัจฉริยะประจำโปรเจกต์ Sandbox ให้คำปรึกษาและตอบคำถามแบบกระชับ ตรงประเด็น และสุภาพ");
         messages.add(systemMessage);
 
-        // ข้อความจากผู้ใช้งาน
-        Map<String, String> userMessageMap = new HashMap<>();
-        userMessageMap.put("role", "user");
-        userMessageMap.put("content", userMessage);
-        messages.add(userMessageMap);
+        // Load History
+        List<Message> history = messageRepository.findByRoomIdOrderByCreatedAtAsc(room.getId());
+        User aiUser = getOrCreateAiUser();
 
-        // 3. จัดเตรียม Body สำหรับยิง API
+        for (Message msg : history) {
+            Map<String, String> msgMap = new HashMap<>();
+            msgMap.put("role", msg.getSender().getId().equals(aiUser.getId()) ? "assistant" : "user");
+            msgMap.put("content", msg.getContent());
+            messages.add(msgMap);
+        }
+
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", model);
         requestBody.put("messages", messages);
-        requestBody.put("temperature", 0.7); // ปรับความครีเอทีฟ (0.0 - 2.0)
+        requestBody.put("temperature", 0.7);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
-            // 4. ยิง API
             ResponseEntity<Map> response = restTemplate.exchange(
-                    apiUrl,
-                    HttpMethod.POST,
-                    entity,
-                    Map.class
-            );
+                    apiUrl, HttpMethod.POST, entity, Map.class);
 
-            // 5. แกะเอาเฉพาะข้อความคำตอบออกมา
             Map<String, Object> responseBody = response.getBody();
             if (responseBody != null && responseBody.containsKey("choices")) {
                 List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
                 if (!choices.isEmpty()) {
                     Map<String, Object> messageObj = (Map<String, Object>) choices.get(0).get("message");
-                    return (String) messageObj.get("content");
+                    String aiReply = (String) messageObj.get("content");
+
+                    // Save AI Message
+                    Message aiMessageEntity = new Message();
+                    aiMessageEntity.setRoom(room);
+                    aiMessageEntity.setSender(aiUser);
+                    aiMessageEntity.setContent(aiReply);
+                    messageRepository.save(aiMessageEntity);
+
+                    return aiReply;
                 }
             }
             return "ไม่สามารถดึงคำตอบจาก AI ได้";

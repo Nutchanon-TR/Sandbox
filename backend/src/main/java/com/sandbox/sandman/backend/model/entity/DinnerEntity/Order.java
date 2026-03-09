@@ -1,4 +1,4 @@
-package com.sandbox.sandman.backend.model.entity;
+package com.sandbox.sandman.backend.model.entity.DinnerEntity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", schema = "dinner")
 public class Order {
     @Id
     @Column(name = "order_id", nullable = false)
