@@ -1,9 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, MoreVertical, Phone, Video } from 'lucide-react';
+import { Send, Phone, Video, MoreVertical } from 'lucide-react';
+import { Avatar, Badge, Typography, Input, Button, Space } from 'antd';
 import axios from 'axios';
 import Image from 'next/image';
+import { TITLE } from "@/constants/Title";
+import { useChangeTitle } from "@/utils/breadCrumbUtil";
+
+const { Text } = Typography;
 
 const API_BASE_URL = 'http://localhost:8080/v1/api/chat';
 
@@ -22,9 +27,10 @@ export default function MessagePage() {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Based on the SQL script provided (Alice)
     const ROOM_ID = 1;
     const CURRENT_USER_ID = 1;
+
+    useChangeTitle(TITLE.MESSAGE, "MESSAGE");
 
     useEffect(() => {
         fetchHistory();
@@ -51,8 +57,7 @@ export default function MessagePage() {
         }
     };
 
-    const handleSendMessage = async (e?: React.FormEvent) => {
-        e?.preventDefault();
+    const handleSendMessage = async () => {
         if (!inputText.trim() || isLoading) return;
 
         const newMsg: Message = {
@@ -86,32 +91,35 @@ export default function MessagePage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-64px)] bg-gray-50 dark:bg-neutral-900 font-sans">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-neutral-800 shadow-sm z-10">
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden">
-                            <Image src="/ai_avatar.png" alt="AI Avatar" width={40} height={40} className="object-cover" />
-                        </div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-neutral-800"></div>
+        // ปรับ Container หลักให้เลื่อน (Scroll) ได้
+        <div className="relative flex flex-col h-[calc(100vh-64px)] overflow-y-auto bg-gray-50 dark:bg-neutral-900 font-sans">
+            
+            {/* Header: ใช้ sticky top-0 */}
+            <div className="sticky top-0 z-20 flex items-center justify-between p-4 bg-white dark:bg-neutral-800 shadow-sm">
+                <Space size="middle">
+                    <Badge dot color="green" offset={[-5, 35]}>
+                        <Avatar src="/ai_avatar.png" size={42} className="bg-indigo-50 border border-indigo-100" />
+                    </Badge>
+                    <div className="flex flex-col">
+                        <Text strong className="text-lg text-gray-800 dark:text-gray-100 leading-none">
+                            AI Assistant
+                        </Text>
+                        <Text type="success" className="text-xs font-medium mt-1">
+                            Active now
+                        </Text>
                     </div>
-                    <div>
-                        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">AI Assistant</h2>
-                        <p className="text-xs text-green-500 font-medium">Active now</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4 text-gray-500 hover:text-gray-700 dark:text-gray-400">
-                    <Phone className="w-5 h-5 cursor-pointer" />
-                    <Video className="w-5 h-5 cursor-pointer" />
-                    <MoreVertical className="w-5 h-5 cursor-pointer" />
-                </div>
+                </Space>
+                <Space size="small">
+                    <Button type="text" icon={<Phone className="w-5 h-5 text-gray-500" />} />
+                    <Button type="text" icon={<Video className="w-5 h-5 text-gray-500" />} />
+                    <Button type="text" icon={<MoreVertical className="w-5 h-5 text-gray-500" />} />
+                </Space>
             </div>
 
-            {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Chat Area: ไม่ต้องเซ็ต overflow แล้ว ให้มันดันพื้นที่ไปเรื่อยๆ */}
+            <div className="flex-1 p-4 space-y-4">
                 {messages.length === 0 && !isLoading && (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                    <div className="h-full flex flex-col items-center justify-center text-gray-400 mt-20">
                         <Image src="/ai_avatar.png" alt="AI Avatar" width={80} height={80} className="mb-4 opacity-50" />
                         <p>Say hello to start the conversation!</p>
                     </div>
@@ -120,23 +128,23 @@ export default function MessagePage() {
                 {messages.map((msg, idx) => (
                     <div
                         key={idx}
-                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'
-                            }`}
+                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                         <div className="flex max-w-[70%] gap-2 items-end">
                             {msg.role === 'assistant' && (
-                                <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex-shrink-0 flex items-center justify-center overflow-hidden mb-1">
-                                    <Image src="/ai_avatar.png" alt="AI Avatar" width={32} height={32} className="object-cover" />
-                                </div>
+                                <Avatar src="/ai_avatar.png" size={32} className="flex-shrink-0 bg-indigo-50 border border-indigo-100" />
                             )}
 
                             <div
-                                className={`p-3 rounded-2xl shadow-sm ${msg.role === 'user'
+                                className={`p-3 rounded-2xl shadow-sm ${
+                                    msg.role === 'user'
                                         ? 'bg-blue-600 text-white rounded-br-none'
                                         : 'bg-white dark:bg-neutral-800 text-gray-800 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-neutral-700'
-                                    }`}
+                                }`}
                             >
-                                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{msg.content}</p>
+                                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                                    {msg.content}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -145,9 +153,7 @@ export default function MessagePage() {
                 {isLoading && (
                     <div className="flex justify-start">
                         <div className="flex items-end gap-2 max-w-[70%]">
-                            <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden mb-1">
-                                <Image src="/ai_avatar.png" alt="AI" width={32} height={32} className="object-cover" />
-                            </div>
+                            <Avatar src="/ai_avatar.png" size={32} className="bg-indigo-50 border border-indigo-100" />
                             <div className="bg-white dark:bg-neutral-800 p-4 rounded-2xl rounded-bl-none border border-gray-100 dark:border-neutral-700 shadow-sm flex gap-1 items-center">
                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
@@ -159,28 +165,28 @@ export default function MessagePage() {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="p-4 bg-white dark:bg-neutral-800 border-t border-gray-100 dark:border-neutral-700">
-                <form
-                    onSubmit={handleSendMessage}
-                    className="flex items-center gap-2 max-w-4xl mx-auto w-full"
-                >
-                    <input
-                        type="text"
+            {/* Input Area: ใช้ sticky bottom-0 */}
+            <div className="sticky bottom-0 z-20 p-4 bg-white dark:bg-neutral-800 border-t border-gray-100 dark:border-neutral-700">
+                <div className="flex items-center gap-2 max-w-4xl mx-auto w-full">
+                    <Input
+                        size="large"
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
+                        onPressEnter={handleSendMessage}
                         placeholder="Type a message..."
-                        className="flex-1 bg-gray-100 dark:bg-neutral-900 border-transparent focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white rounded-full px-5 py-3 outline-none transition-all duration-200"
                         disabled={isLoading}
+                        className="rounded-full bg-gray-100 dark:bg-neutral-900 border-transparent hover:border-transparent focus:bg-white px-5"
                     />
-                    <button
-                        type="submit"
+                    <Button
+                        type="primary"
+                        shape="circle"
+                        size="large"
+                        icon={<Send className="w-4 h-4" />}
+                        onClick={handleSendMessage}
                         disabled={!inputText.trim() || isLoading}
-                        className="p-3 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <Send className="w-5 h-5" />
-                    </button>
-                </form>
+                        className="bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
+                    />
+                </div>
             </div>
         </div>
     );
