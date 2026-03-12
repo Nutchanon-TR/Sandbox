@@ -4,8 +4,8 @@ import { TITLE } from "@/constants/Title";
 import { useChangeTitle } from "@/utils/breadCrumbUtil";
 import { useSession, signOut } from "next-auth/react";
 
-export default function ProfilePage() {
-    useChangeTitle(TITLE.PROFILE);
+export default function MessagePage() {
+    useChangeTitle(TITLE.MESSAGE);
     const { data: session, status } = useSession();
 
     return (
@@ -50,6 +50,12 @@ export default function ProfilePage() {
                                 Logout
                             </button>
                         </div>
+                        <button 
+                            onClick={() => console.log("Session Data:", session)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm active:scale-95"
+                        >
+                            Log Session Data
+                        </button>
                     </div>
                 </div>
             ) : (

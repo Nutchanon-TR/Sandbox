@@ -7,6 +7,7 @@ import axios from 'axios';
 import Image from 'next/image';
 import { TITLE } from "@/constants/Title";
 import { useChangeTitle } from "@/utils/breadCrumbUtil";
+import { useSession } from 'next-auth/react';
 
 const { Text } = Typography;
 
@@ -22,13 +23,14 @@ interface Message {
 }
 
 export default function MessagePage() {
+    const { data: session, status } = useSession();
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const ROOM_ID = 1;
-    const CURRENT_USER_ID = 1;
+    const ROOM_ID = 2;
+    const CURRENT_USER_ID = session?.user?.id ? Number(session.user.id) : 999;
 
     useChangeTitle(TITLE.MESSAGE, "MESSAGE");
 
@@ -95,7 +97,7 @@ export default function MessagePage() {
         <div>
             
             {/* Header: ใช้ sticky top-0 */}
-            <div className="sticky top-6 z-20 flex items-center justify-between p-4 bg-white dark:bg-neutral-800 shadow-sm">
+            <div className="sticky top-0 mt-[-25px] z-20 flex items-center justify-between p-4 bg-white dark:bg-neutral-800 shadow-sm">
                 <Space size="middle">
                     <Badge dot color="green" offset={[-5, 35]}>
                         <Avatar src="/ai_avatar.png" size={42} className="bg-indigo-50 border border-indigo-100" />
@@ -117,7 +119,7 @@ export default function MessagePage() {
             </div>
 
             {/* Chat Area: ไม่ต้องเซ็ต overflow แล้ว ให้มันดันพื้นที่ไปเรื่อยๆ */}
-            <div className="flex-1 p-4 space-y-4 relative flex flex-col h-[calc(100vh-64px)] overflow-y-auto bg-gray-50 dark:bg-neutral-900 font-sans">
+            <div className=" flex-1 p-4 space-y-4 relative flex flex-col h-[calc(100vh-64px)] overflow-y-auto bg-gray-50 dark:bg-neutral-900 font-sans">
                 {messages.length === 0 && !isLoading && (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400 mt-20">
                         <Image src="/ai_avatar.png" alt="AI Avatar" width={80} height={80} className="mb-4 opacity-50" />
@@ -166,7 +168,7 @@ export default function MessagePage() {
             </div>
 
             {/* Input Area: ใช้ sticky bottom-0 */}
-            <div className="sticky bottom-6 z-20 p-4 bg-white dark:bg-neutral-800 border-t border-gray-100 dark:border-neutral-700">
+            <div className="sticky mb-[-23px] bottom-0 z-20 p-4 bg-white dark:bg-neutral-800 border-t border-gray-100 dark:border-neutral-700">
                 <div className="flex items-center gap-2 max-w-4xl mx-auto w-full">
                     <Input
                         size="large"

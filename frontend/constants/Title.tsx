@@ -4,6 +4,9 @@ import {
     DesktopOutlined,
     UserOutlined,
     HomeOutlined,
+    TeamOutlined,
+    MessageOutlined,
+    BuildOutlined,
 } from "@ant-design/icons";
 import { TitleDetail } from "@/interface/common/TitleDetail";
 
@@ -30,11 +33,21 @@ export const TITLE: Record<string, TitleDetail> = {
     MESSAGE: {
         title: "Message",
         urlPath: "/message",
-        icon: <UserOutlined />,
+        icon: <MessageOutlined />,
     },
     PROFILE: {
         title: "Profile",
         urlPath: "/profile",
         icon: <UserOutlined />,
+    },
+    SOCIAL: {
+        title: "Social",
+        urlPath: "/social",
+        icon: <TeamOutlined />,
+    },
+    BUILD: {
+        title: "Build",
+        urlPath: "/build",
+        icon: <BuildOutlined />,
     },
 }
