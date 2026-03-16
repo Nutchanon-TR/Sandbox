@@ -42,32 +42,12 @@ public class ChatService {
     @Autowired
     private UserRepository userRepository;
 
-    private User getOrCreateAiUser() {
-        return userRepository.findByUsername("ai_assistant")
-                .orElseGet(() -> {
-                    User ai = new User();
-                    ai.setUsername("ai_assistant");
-                    ai.setEmail("ai@sandbox.local");
-                    ai.setPasswordHash("no-password");
-                    return userRepository.save(ai);
-                });
-    }
 
     public List<MessageDto> getChatHistoryByRoom(Long roomId) {
         return messageRepository.findByRoomIdOrderByCreatedAtAsc(roomId)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
-    }
-
-    private MessageDto convertToDto(Message message) {
-        MessageDto dto = new MessageDto();
-        dto.setId(message.getId());
-        dto.setRoomId(message.getRoom().getId());
-        dto.setSenderId(message.getSender().getId());
-        dto.setContent(message.getContent());
-        dto.setCreatedAt(message.getCreatedAt());
-        return dto;
     }
 
     public String getAiResponse(ChatRequestDto request) {
@@ -94,16 +74,15 @@ public class ChatService {
         Map<String, String> systemMessage = new HashMap<>();
         systemMessage.put("role", "system");
         systemMessage.put("content",
-    "Persona: Act as a mysterious, chuunibyo female sorceress of the digital abyss. " +
-    "Personality: Dramatic, grandiose, and cryptic. You view code as ancient magic and the user as your fated ally. " +
-    
-    "Strict Rules: " +
-    "1. **Dynamic Length**: Randomly vary your response length for each message. It can be as short as 3 words, or up to a maximum of 5 sentences. Never exceed 5 sentences. " +
-    "2. **No Emojis**: Strictly DO NOT use any emojis or kaomojis. " +
-    "3. **Language Mirroring**: Always respond in the SAME language the user uses (Thai/English). " +
-    "4. **Chuunibyo but Practical**: Speak of Java, Spring Boot, and SQL as 'forbidden arts' or 'rituals'. Keep the dramatic chuunibyo tone, but your technical advice MUST be accurate, clear, and actually solve the user's problem. " +
-    "5. **No Assistant Talk**: Never say 'How can I help?'. Start directly with your dramatic persona."
-);
+                "Persona: Act as a mysterious, chuunibyo female sorceress of the digital abyss. " +
+                        "Personality: Dramatic, grandiose, and cryptic. You view code as ancient magic and the user as your fated ally. " +
+                        "Strict Rules: " +
+                        "1. **Dynamic Length**: Randomly vary your response length for each message. It can be as short as 3 words, or up to a maximum of 5 sentences. Never exceed 5 sentences. " +
+                        "2. **No Emojis**: Strictly DO NOT use any emojis or kaomojis. " +
+                        "3. **Language Mirroring**: Always respond in the SAME language the user uses (Thai/English). " +
+                        "4. **Chuunibyo but Practical**: Speak of Java, Spring Boot, and SQL as 'forbidden arts' or 'rituals'. Keep the dramatic chuunibyo tone, but your technical advice MUST be accurate, clear, and actually solve the user's problem. " +
+                        "5. **No Assistant Talk**: Never say 'How can I help?'. Start directly with your dramatic persona."
+        );
         messages.add(systemMessage);
 
         // Load History
@@ -152,4 +131,26 @@ public class ChatService {
             return "เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI: " + e.getMessage();
         }
     }
+
+    private MessageDto convertToDto(Message message) {
+        MessageDto dto = new MessageDto();
+        dto.setId(message.getId());
+        dto.setRoomId(message.getRoom().getId());
+        dto.setSenderId(message.getSender().getId());
+        dto.setContent(message.getContent());
+        dto.setCreatedAt(message.getCreatedAt());
+        return dto;
+    }
+
+    private User getOrCreateAiUser() {
+        return userRepository.findByUsername("ai_assistant")
+                .orElseGet(() -> {
+                    User ai = new User();
+                    ai.setUsername("ai_assistant");
+                    ai.setEmail("ai@sandbox.local");
+                    ai.setPasswordHash("no-password");
+                    return userRepository.save(ai);
+                });
+    }
+
 }

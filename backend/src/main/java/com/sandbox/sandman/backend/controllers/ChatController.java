@@ -18,15 +18,16 @@ public class ChatController {
     @Autowired
     private ChatService chatService;
 
+    @GetMapping("/history/{roomId}")
+    public ResponseEntity<List<MessageDto>> getChatHistory(@PathVariable Long roomId) {
+        List<MessageDto> history = chatService.getChatHistoryByRoom(roomId);
+        return ResponseEntity.ok(history);
+    }
+
     @PostMapping
     public ResponseEntity<ChatResponseDto> chatWithAi(@RequestBody ChatRequestDto request) {
         String reply = chatService.getAiResponse(request);
         return ResponseEntity.ok(new ChatResponseDto(reply));
     }
 
-    @GetMapping("/history/{roomId}")
-    public ResponseEntity<List<MessageDto>> getChatHistory(@PathVariable Long roomId) {
-        List<MessageDto> history = chatService.getChatHistoryByRoom(roomId);
-        return ResponseEntity.ok(history);
-    }
 }
