@@ -55,9 +55,8 @@ public class ChatService {
 
 
     public List<MessageDto> getChatHistoryByRoom(Long roomId) {
-        Room room = roomRepository.findById(roomId).orElseGet(() ->
-                roomRepository.findAll().stream().findFirst().orElse(null)
-        );
+        Room room = (roomId != null ? roomRepository.findById(roomId) : java.util.Optional.<Room>empty())
+                .orElseGet(() -> roomRepository.findAll().stream().findFirst().orElse(null));
         
         if (room == null) {
             return new ArrayList<>();
@@ -70,14 +69,16 @@ public class ChatService {
     }
 
     public String getAiResponse(ChatRequestDto request) {
-        Room room = roomRepository.findById(request.getRoomId())
+        Long reqRoomId = request.getRoomId();
+        Room room = (reqRoomId != null ? roomRepository.findById(reqRoomId) : java.util.Optional.<Room>empty())
                 .orElseGet(() -> roomRepository.findAll().stream().findFirst().orElseGet(() -> {
                     Room newRoom = new Room();
                     newRoom.setName("General Sandbox Room");
                     return roomRepository.save(newRoom);
                 }));
 
-        User user = userRepository.findById(request.getSenderId())
+        Long reqSenderId = request.getSenderId();
+        User user = (reqSenderId != null ? userRepository.findById(reqSenderId) : java.util.Optional.<User>empty())
                 .orElseGet(() -> userRepository.findByUsername("guest_user").orElseGet(() -> {
                     User newUser = new User();
                     newUser.setUsername("guest_user");
