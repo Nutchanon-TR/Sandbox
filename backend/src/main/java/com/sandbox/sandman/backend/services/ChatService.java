@@ -9,14 +9,20 @@ import com.sandbox.sandman.backend.repositories.ChatRepository.MessageRepository
 import com.sandbox.sandman.backend.repositories.ChatRepository.RoomRepository;
 import com.sandbox.sandman.backend.repositories.ChatRepository.UserRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+// Spring AI Imports
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.SystemPromptTemplate;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,27 +30,40 @@ import java.util.stream.Collectors;
 @Service
 public class ChatService {
 
-    @Value("${ai.api-url}")
-    private String apiUrl;
+    private final MessageRepository messageRepository;
+    private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
 
-    @Value("${ai.api-key}")
-    private String apiKey;
+    // ตัวแทนของ AI และ ฐานข้อมูลเวทมนตร์
+    private final ChatClient chatClient;
+    private final VectorStore vectorStore;
 
-    @Value("${ai.model}")
-    private String model;
+    // ใช้ Constructor Injection แทน @Autowired และ @Value เพื่อความคลีน
+    public ChatService(MessageRepository messageRepository,
+                       RoomRepository roomRepository,
+                       UserRepository userRepository,
+                       ChatClient.Builder chatClientBuilder,
+                       VectorStore vectorStore) {
+        this.messageRepository = messageRepository;
+        this.roomRepository = roomRepository;
+        this.userRepository = userRepository;
 
-    @Autowired
-    private MessageRepository messageRepository;
-
-    @Autowired
-    private RoomRepository roomRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+        // Spring AI จะปั้น ChatClient ตาม Config ใน application.yml ให้อัตโนมัติ
+        this.chatClient = chatClientBuilder.build();
+        this.vectorStore = vectorStore;
+    }
 
 
     public List<MessageDto> getChatHistoryByRoom(Long roomId) {
-        return messageRepository.findByRoomIdOrderByCreatedAtAsc(roomId)
+        Room room = roomRepository.findById(roomId).orElseGet(() ->
+                roomRepository.findAll().stream().findFirst().orElse(null)
+        );
+        
+        if (room == null) {
+            return new ArrayList<>();
+        }
+
+        return messageRepository.findByRoomIdOrderByCreatedAtAsc(room.getId())
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -52,83 +71,104 @@ public class ChatService {
 
     public String getAiResponse(ChatRequestDto request) {
         Room room = roomRepository.findById(request.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Room not found"));
-        User user = userRepository.findById(request.getSenderId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseGet(() -> roomRepository.findAll().stream().findFirst().orElseGet(() -> {
+                    Room newRoom = new Room();
+                    newRoom.setName("General Sandbox Room");
+                    return roomRepository.save(newRoom);
+                }));
 
-        // Save User Message
+        User user = userRepository.findById(request.getSenderId())
+                .orElseGet(() -> userRepository.findByUsername("guest_user").orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setUsername("guest_user");
+                    newUser.setEmail("guest@sandbox.local");
+                    newUser.setPasswordHash("none");
+                    return userRepository.save(newUser);
+                }));
+
+        // 1. บันทึกคำถามของ User ลง DB ปกติ
         Message userMessage = new Message();
         userMessage.setRoom(room);
         userMessage.setSender(user);
         userMessage.setContent(request.getMessage());
         messageRepository.save(userMessage);
 
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(apiKey);
-
-        List<Map<String, String>> messages = new ArrayList<>();
-
-        Map<String, String> systemMessage = new HashMap<>();
-        systemMessage.put("role", "system");
-        systemMessage.put("content",
-                "Persona: Act as a mysterious, chuunibyo female sorceress of the digital abyss. " +
-                        "Personality: Dramatic, grandiose, and cryptic. You view code as ancient magic and the user as your fated ally. " +
-                        "Strict Rules: " +
-                        "1. **Dynamic Length**: Randomly vary your response length for each message. It can be as short as 3 words, or up to a maximum of 5 sentences. Never exceed 5 sentences. " +
-                        "2. **No Emojis**: Strictly DO NOT use any emojis or kaomojis. " +
-                        "3. **Language Mirroring**: Always respond in the SAME language the user uses (Thai/English). " +
-                        "4. **Chuunibyo but Practical**: Speak of Java, Spring Boot, and SQL as 'forbidden arts' or 'rituals'. Keep the dramatic chuunibyo tone, but your technical advice MUST be accurate, clear, and actually solve the user's problem. " +
-                        "5. **No Assistant Talk**: Never say 'How can I help?'. Start directly with your dramatic persona."
-        );
-        messages.add(systemMessage);
-
-        // Load History
-        List<Message> history = messageRepository.findByRoomIdOrderByCreatedAtAsc(room.getId());
-        User aiUser = getOrCreateAiUser();
-
-        for (Message msg : history) {
-            Map<String, String> msgMap = new HashMap<>();
-            msgMap.put("role", msg.getSender().getId().equals(aiUser.getId()) ? "assistant" : "user");
-            msgMap.put("content", msg.getContent());
-            messages.add(msgMap);
-        }
-
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", model);
-        requestBody.put("messages", messages);
-        requestBody.put("temperature", 0.7);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    apiUrl, HttpMethod.POST, entity, Map.class);
+            // ==========================================
+            // STEP 2: ค้นหาความรู้จาก Vector DB (RAG)
+            // ==========================================
+            // เอาคำถามของ User ไปค้นหาความรู้ที่เกี่ยวข้องที่สุด 2 อันดับแรก
+            List<Document> similarDocs = vectorStore.similaritySearch(
+                    SearchRequest.query(request.getMessage()).withTopK(2)
+            );
 
-            Map<String, Object> responseBody = response.getBody();
-            if (responseBody != null && responseBody.containsKey("choices")) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<String, Object> messageObj = (Map<String, Object>) choices.get(0).get("message");
-                    String aiReply = (String) messageObj.get("content");
+            // จับเอกสารที่หาเจอมาต่อกันเป็น String เดียว
+            String retrievedContext = similarDocs.stream()
+                    .map(Document::getContent)
+                    .collect(Collectors.joining("\n---\n"));
 
-                    // Save AI Message
-                    Message aiMessageEntity = new Message();
-                    aiMessageEntity.setRoom(room);
-                    aiMessageEntity.setSender(aiUser);
-                    aiMessageEntity.setContent(aiReply);
-                    messageRepository.save(aiMessageEntity);
+            // ==========================================
+            // STEP 3: สร้าง System Context พร้อมยัดข้อมูล (Prompt Engineering)
+            // ==========================================
+            String systemText = """
+                Persona: Act as a mysterious, chuunibyo female sorceress of the digital abyss.
+                Personality: Dramatic, grandiose, and cryptic. You view code as ancient magic and the user as your fated ally.
+                
+                Strict Rules:
+                1. Dynamic Length: Randomly vary your response length. Max 5 sentences.
+                2. No Emojis: Strictly DO NOT use any emojis or kaomojis.
+                3. Language Mirroring: Always respond in the SAME language the user uses (Thai/English).
+                4. Chuunibyo but Practical: Speak of Java, Spring Boot, and SQL as 'forbidden arts' or 'rituals'. Your technical advice MUST be accurate.
+                5. No Assistant Talk: Never say 'How can I help?'. Start directly with your dramatic persona.
+                6. USE FORBIDDEN KNOWLEDGE: Answer using the knowledge provided below. If it's not in the knowledge, use your general magic.
+                
+                [Forbidden Knowledge Scrolls]
+                {context}
+                """;
 
-                    return aiReply;
+            // สอดไส้ {context} ด้วยข้อมูลจาก Vector DB
+            SystemPromptTemplate promptTemplate = new SystemPromptTemplate(systemText);
+            org.springframework.ai.chat.messages.Message systemMessage =
+                    promptTemplate.createMessage(Map.of("context", retrievedContext));
+
+            // ==========================================
+            // STEP 4: เตรียมประวัติการคุย (Chat Memory)
+            // ==========================================
+            List<org.springframework.ai.chat.messages.Message> aiPromptMessages = new ArrayList<>();
+            aiPromptMessages.add(systemMessage); // ใส่ System Prompt เป็นข้อความแรกเสมอ
+
+            User aiUser = getOrCreateAiUser();
+            List<Message> history = messageRepository.findByRoomIdOrderByCreatedAtAsc(room.getId());
+
+            // แปลง Entity ให้กลายเป็น Message Class ของ Spring AI
+            for (Message msg : history) {
+                if (msg.getSender().getId().equals(aiUser.getId())) {
+                    aiPromptMessages.add(new AssistantMessage(msg.getContent()));
+                } else {
+                    aiPromptMessages.add(new UserMessage(msg.getContent()));
                 }
             }
-            return "ไม่สามารถดึงคำตอบจาก AI ได้";
+
+            // ==========================================
+            // STEP 5: ยิงหา AI Model (ผ่าน Spring AI)
+            // ==========================================
+            Prompt prompt = new Prompt(aiPromptMessages);
+
+            // แทนที่ RestTemplate ยาวๆ ด้วยคำสั่งบรรทัดเดียว!
+            String aiReply = chatClient.prompt(prompt).call().content();
+
+            // 6. บันทึกคำตอบของ AI ลง DB
+            Message aiMessageEntity = new Message();
+            aiMessageEntity.setRoom(room);
+            aiMessageEntity.setSender(aiUser);
+            aiMessageEntity.setContent(aiReply);
+            messageRepository.save(aiMessageEntity);
+
+            return aiReply;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI: " + e.getMessage();
+            return "ห้วงมิติเกิดการบิดเบี้ยว ข่ายเวทย์ล้มเหลวชั่วคราว: " + e.getMessage();
         }
     }
 
@@ -152,5 +192,4 @@ public class ChatService {
                     return userRepository.save(ai);
                 });
     }
-
 }
