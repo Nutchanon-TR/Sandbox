@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@RestController
 @RequestMapping("${app.api.prefix.report}")
 @Slf4j
 public class ReportController {
@@ -19,5 +20,10 @@ public class ReportController {
     public ResponseEntity<ByteArrayResource> uploadImage(@RequestParam("imageFile") MultipartFile file) {
         log.info("Start uploading image file");
         return blobStorageService.uploadImage(file);
+    }
+
+    @GetMapping("/hi")
+    public String hi() {
+        return "hi";
     }
 }
