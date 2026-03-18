@@ -7,6 +7,7 @@ import java.time.ZonedDateTime;
 public class MessageDto {
     private Long id;
     private Long senderId;
+    private String senderUsername;
     private Long roomId;
     private String content;
     private ZonedDateTime createdAt;

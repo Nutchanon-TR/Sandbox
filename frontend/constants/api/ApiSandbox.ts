@@ -1,6 +1,6 @@
 import { ApiDetail } from "@/interface/common/ApiDetail";
 
-const contextPath = process.env.NEXT_PUBLIC_API_URL
+const contextPath = process.env.NEXT_PUBLIC_API_URL || '';
 
 export const API_SANDBOX: Record<string, ApiDetail> = {
     UPLOAD_IMAGE: {
@@ -10,5 +10,13 @@ export const API_SANDBOX: Record<string, ApiDetail> = {
     SUPPLIER_ORDER: {
         path: `${contextPath}/v1/api/supplier-order/inquiry`,
         method: 'GET',
-    }
+    },
+    CHAT: {
+        path: `${contextPath}/v1/api/chat`,
+        method: 'POST',
+    },
+    CHAT_HISTORY: {
+        path: `${contextPath}/v1/api/chat/history/{roomId}`,
+        method: 'GET',
+    },
 }

@@ -218,7 +218,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                 <Content className={`${collapsed ? 'ml-10' : 'ml-6'} my-6 flex flex-col overflow-auto`}>
 
                     <div
-                        className="p-6 flex-1 shadow-sm transition-colors duration-300"
+                        className="p-6 flex-1 shadow-sm transition-colors duration-300 flex flex-col"
                         style={{
                             background: colorBgContainer,
                             borderRadius: borderRadiusLG,

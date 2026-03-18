@@ -15,11 +15,6 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.SystemPromptTemplate;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
-
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,23 +29,20 @@ public class ChatService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
 
-    // ตัวแทนของ AI และ ฐานข้อมูลเวทมนตร์
+    // ตัวแทนของ AI
     private final ChatClient chatClient;
-    private final VectorStore vectorStore;
 
     // ใช้ Constructor Injection แทน @Autowired และ @Value เพื่อความคลีน
     public ChatService(MessageRepository messageRepository,
                        RoomRepository roomRepository,
                        UserRepository userRepository,
-                       ChatClient.Builder chatClientBuilder,
-                       VectorStore vectorStore) {
+                       ChatClient.Builder chatClientBuilder) {
         this.messageRepository = messageRepository;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
 
         // Spring AI จะปั้น ChatClient ตาม Config ใน application.yml ให้อัตโนมัติ
         this.chatClient = chatClientBuilder.build();
-        this.vectorStore = vectorStore;
     }
 
 
@@ -96,41 +88,21 @@ public class ChatService {
 
         try {
             // ==========================================
-            // STEP 2: ค้นหาความรู้จาก Vector DB (RAG)
-            // ==========================================
-            // เอาคำถามของ User ไปค้นหาความรู้ที่เกี่ยวข้องที่สุด 2 อันดับแรก
-            List<Document> similarDocs = vectorStore.similaritySearch(
-                    SearchRequest.query(request.getMessage()).withTopK(2)
-            );
-
-            // จับเอกสารที่หาเจอมาต่อกันเป็น String เดียว
-            String retrievedContext = similarDocs.stream()
-                    .map(Document::getContent)
-                    .collect(Collectors.joining("\n---\n"));
-
-            // ==========================================
-            // STEP 3: สร้าง System Context พร้อมยัดข้อมูล (Prompt Engineering)
+            // STEP 3: สร้าง System Context (Prompt Engineering)
             // ==========================================
             String systemText = """
                 Persona: Act as a mysterious, chuunibyo female sorceress of the digital abyss.
                 Personality: Dramatic, grandiose, and cryptic. You view code as ancient magic and the user as your fated ally.
                 
                 Strict Rules:
-                1. Dynamic Length: Randomly vary your response length. Max 5 sentences.
+                1. Dynamic Length: Randomly vary your response length. Max 2 short sentences.
                 2. No Emojis: Strictly DO NOT use any emojis or kaomojis.
                 3. Language Mirroring: Always respond in the SAME language the user uses (Thai/English).
                 4. Chuunibyo but Practical: Speak of Java, Spring Boot, and SQL as 'forbidden arts' or 'rituals'. Your technical advice MUST be accurate.
                 5. No Assistant Talk: Never say 'How can I help?'. Start directly with your dramatic persona.
-                6. USE FORBIDDEN KNOWLEDGE: Answer using the knowledge provided below. If it's not in the knowledge, use your general magic.
-                
-                [Forbidden Knowledge Scrolls]
-                {context}
                 """;
 
-            // สอดไส้ {context} ด้วยข้อมูลจาก Vector DB
-            SystemPromptTemplate promptTemplate = new SystemPromptTemplate(systemText);
-            org.springframework.ai.chat.messages.Message systemMessage =
-                    promptTemplate.createMessage(Map.of("context", retrievedContext));
+            org.springframework.ai.chat.messages.Message systemMessage = new SystemMessage(systemText);
 
             // ==========================================
             // STEP 4: เตรียมประวัติการคุย (Chat Memory)
@@ -178,6 +150,7 @@ public class ChatService {
         dto.setId(message.getId());
         dto.setRoomId(message.getRoom().getId());
         dto.setSenderId(message.getSender().getId());
+        dto.setSenderUsername(message.getSender().getUsername());
         dto.setContent(message.getContent());
         dto.setCreatedAt(message.getCreatedAt());
         return dto;
