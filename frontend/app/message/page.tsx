@@ -34,8 +34,9 @@ export default function MessagePage() {
     const notification = useNotification();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const ROOM_ID = 2;
-    const CURRENT_USER_ID = session?.user?.id ? Number(session.user.id) : 1;
+    const ROOM_ID = 1;
+    // const CURRENT_USER_ID = session?.user?.id ? Number(session.user.id) : 1;
+    const CURRENT_USER_ID = 1;
 
     const { theme } = useTheme();
 

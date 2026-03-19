@@ -7,6 +7,7 @@ export async function apiCall<T>(
   pathParams: Record<string, string | number> = {}
 ): Promise<T> {
   let url = apiDetail.path;
+  const method = (apiDetail.method || 'POST').toUpperCase();
 
   // Replace {paramName} in the URL
   Object.keys(pathParams).forEach(key => {
@@ -14,9 +15,9 @@ export async function apiCall<T>(
   });
 
   const response = await api({
-    method: apiDetail.method || 'POST',
+    method,
     url: url,
-    data: request,
+    ...(method === 'GET' ? { params: request } : { data: request }),
   });
   return response.data;
 }
