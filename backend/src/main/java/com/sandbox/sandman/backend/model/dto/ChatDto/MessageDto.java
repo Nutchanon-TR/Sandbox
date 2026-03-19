@@ -8,6 +8,7 @@ public class MessageDto {
     private Long id;
     private Long senderId;
     private String senderUsername;
+    private String senderRole;
     private Long roomId;
     private String content;
     private ZonedDateTime createdAt;

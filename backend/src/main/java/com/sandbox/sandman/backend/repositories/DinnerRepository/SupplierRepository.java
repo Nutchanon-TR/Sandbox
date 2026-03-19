@@ -23,8 +23,8 @@ public interface SupplierRepository extends JpaRepository<Supplier, Integer> {
             o.delivery_date AS deliveryDate, 
             o.status AS status, 
             o.notes AS notes
-        FROM suppliers s
-        JOIN orders o ON s.supplier_id = o.supplier_id
+        FROM dinner.suppliers s
+        JOIN dinner.orders o ON s.supplier_id = o.supplier_id
         """, nativeQuery = true)
     Page<SupplierOrderDto> findSupplierOrder(Pageable pageable);
 }

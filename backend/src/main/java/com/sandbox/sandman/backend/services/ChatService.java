@@ -2,9 +2,11 @@ package com.sandbox.sandman.backend.services;
 
 import com.sandbox.sandman.backend.model.dto.ChatDto.ChatRequestDto;
 import com.sandbox.sandman.backend.model.dto.ChatDto.MessageDto;
+import com.sandbox.sandman.backend.model.entity.ChatEntity.AiContext;
 import com.sandbox.sandman.backend.model.entity.ChatEntity.Message;
 import com.sandbox.sandman.backend.model.entity.ChatEntity.Room;
 import com.sandbox.sandman.backend.model.entity.ChatEntity.User;
+import com.sandbox.sandman.backend.repositories.ChatRepository.AiContextRepository;
 import com.sandbox.sandman.backend.repositories.ChatRepository.MessageRepository;
 import com.sandbox.sandman.backend.repositories.ChatRepository.RoomRepository;
 import com.sandbox.sandman.backend.repositories.ChatRepository.UserRepository;
@@ -19,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,31 +29,25 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final AiContextRepository aiContextRepository;
 
-    // ตัวแทนของ AI
     private final ChatClient chatClient;
 
-    // ใช้ Constructor Injection แทน @Autowired และ @Value เพื่อความคลีน
     public ChatService(MessageRepository messageRepository,
                        RoomRepository roomRepository,
                        UserRepository userRepository,
+                       AiContextRepository aiContextRepository,
                        ChatClient.Builder chatClientBuilder) {
         this.messageRepository = messageRepository;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
-
-        // Spring AI จะปั้น ChatClient ตาม Config ใน application.yml ให้อัตโนมัติ
+        this.aiContextRepository = aiContextRepository;
         this.chatClient = chatClientBuilder.build();
     }
 
-
     public List<MessageDto> getChatHistoryByRoom(Long roomId) {
-        Room room = (roomId != null ? roomRepository.findById(roomId) : java.util.Optional.<Room>empty())
-                .orElseGet(() -> roomRepository.findAll().stream().findFirst().orElse(null));
-        
-        if (room == null) {
-            return new ArrayList<>();
-        }
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
 
         return messageRepository.findByRoomIdOrderByCreatedAtAsc(room.getId())
                 .stream()
@@ -61,88 +56,72 @@ public class ChatService {
     }
 
     public String getAiResponse(ChatRequestDto request) {
+        // STEP 1: Validate and find room
         Long reqRoomId = request.getRoomId();
-        Room room = (reqRoomId != null ? roomRepository.findById(reqRoomId) : java.util.Optional.<Room>empty())
-                .orElseGet(() -> roomRepository.findAll().stream().findFirst().orElseGet(() -> {
-                    Room newRoom = new Room();
-                    newRoom.setName("General Sandbox Room");
-                    return roomRepository.save(newRoom);
-                }));
+        if (reqRoomId == null) {
+            throw new RuntimeException("Room ID is required");
+        }
+        Room room = roomRepository.findById(reqRoomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
 
+        // STEP 2: Validate and find sender
         Long reqSenderId = request.getSenderId();
-        User user = (reqSenderId != null ? userRepository.findById(reqSenderId) : java.util.Optional.<User>empty())
-                .orElseGet(() -> userRepository.findByUsername("guest_user").orElseGet(() -> {
-                    User newUser = new User();
-                    newUser.setUsername("guest_user");
-                    newUser.setEmail("guest@sandbox.local");
-                    newUser.setPasswordHash("none");
-                    return userRepository.save(newUser);
-                }));
+        if (reqSenderId == null) {
+            throw new RuntimeException("Sender ID is required");
+        }
+        User user = userRepository.findById(reqSenderId)
+                .orElseThrow(() -> new RuntimeException("Sender not found"));
 
-        // 1. บันทึกคำถามของ User ลง DB ปกติ
+        // STEP 3: Save user's message to DB
         Message userMessage = new Message();
         userMessage.setRoom(room);
         userMessage.setSender(user);
         userMessage.setContent(request.getMessage());
         messageRepository.save(userMessage);
 
-        try {
-            // ==========================================
-            // STEP 3: สร้าง System Context (Prompt Engineering)
-            // ==========================================
-            String systemText = """
-                Persona: Act as a mysterious, chuunibyo female sorceress of the digital abyss.
-                Personality: Dramatic, grandiose, and cryptic. You view code as ancient magic and the user as your fated ally.
-                
-                Strict Rules:
-                1. Dynamic Length: Randomly vary your response length. Max 2 short sentences.
-                2. No Emojis: Strictly DO NOT use any emojis or kaomojis.
-                3. Language Mirroring: Always respond in the SAME language the user uses (Thai/English).
-                4. Chuunibyo but Practical: Speak of Java, Spring Boot, and SQL as 'forbidden arts' or 'rituals'. Your technical advice MUST be accurate.
-                5. No Assistant Talk: Never say 'How can I help?'. Start directly with your dramatic persona.
-                """;
+        // STEP 4: Get AI context (system prompt) from DB
+        User aiUser = getOrCreateAiChatBot();
+        AiContext aiContext = aiContextRepository.findByUserId(aiUser.getId())
+                .orElseThrow(() -> new RuntimeException("AI context not configured for this chatbot"));
+        String systemText = aiContext.getSystemText();
 
-            org.springframework.ai.chat.messages.Message systemMessage = new SystemMessage(systemText);
+        // STEP 5: Call AI and save reply
+        return callAiAndSaveReply(room, aiUser, systemText);
+    }
 
-            // ==========================================
-            // STEP 4: เตรียมประวัติการคุย (Chat Memory)
-            // ==========================================
-            List<org.springframework.ai.chat.messages.Message> aiPromptMessages = new ArrayList<>();
-            aiPromptMessages.add(systemMessage); // ใส่ System Prompt เป็นข้อความแรกเสมอ
+    /**
+     * Builds the AI prompt from chat history and system context,
+     * sends it to the AI model, saves the reply, and returns it.
+     */
+    private String callAiAndSaveReply(Room room, User aiUser, String systemText) {
+        // Build prompt messages
+        org.springframework.ai.chat.messages.Message systemMessage = new SystemMessage(systemText);
 
-            User aiUser = getOrCreateAiUser();
-            List<Message> history = messageRepository.findByRoomIdOrderByCreatedAtAsc(room.getId());
+        List<org.springframework.ai.chat.messages.Message> aiPromptMessages = new ArrayList<>();
+        aiPromptMessages.add(systemMessage);
 
-            // แปลง Entity ให้กลายเป็น Message Class ของ Spring AI
-            for (Message msg : history) {
-                if (msg.getSender().getId().equals(aiUser.getId())) {
-                    aiPromptMessages.add(new AssistantMessage(msg.getContent()));
-                } else {
-                    aiPromptMessages.add(new UserMessage(msg.getContent()));
-                }
+        List<Message> history = messageRepository.findByRoomIdOrderByCreatedAtAsc(room.getId());
+
+        for (Message msg : history) {
+            if (msg.getSender().getId().equals(aiUser.getId())) {
+                aiPromptMessages.add(new AssistantMessage(msg.getContent()));
+            } else {
+                aiPromptMessages.add(new UserMessage(msg.getContent()));
             }
-
-            // ==========================================
-            // STEP 5: ยิงหา AI Model (ผ่าน Spring AI)
-            // ==========================================
-            Prompt prompt = new Prompt(aiPromptMessages);
-
-            // แทนที่ RestTemplate ยาวๆ ด้วยคำสั่งบรรทัดเดียว!
-            String aiReply = chatClient.prompt(prompt).call().content();
-
-            // 6. บันทึกคำตอบของ AI ลง DB
-            Message aiMessageEntity = new Message();
-            aiMessageEntity.setRoom(room);
-            aiMessageEntity.setSender(aiUser);
-            aiMessageEntity.setContent(aiReply);
-            messageRepository.save(aiMessageEntity);
-
-            return aiReply;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "ห้วงมิติเกิดการบิดเบี้ยว ข่ายเวทย์ล้มเหลวชั่วคราว: " + e.getMessage();
         }
+
+        // Call AI model
+        Prompt prompt = new Prompt(aiPromptMessages);
+        String aiReply = chatClient.prompt(prompt).call().content();
+
+        // Save AI reply to DB
+        Message aiMessageEntity = new Message();
+        aiMessageEntity.setRoom(room);
+        aiMessageEntity.setSender(aiUser);
+        aiMessageEntity.setContent(aiReply);
+        messageRepository.save(aiMessageEntity);
+
+        return aiReply;
     }
 
     private MessageDto convertToDto(Message message) {
@@ -151,18 +130,20 @@ public class ChatService {
         dto.setRoomId(message.getRoom().getId());
         dto.setSenderId(message.getSender().getId());
         dto.setSenderUsername(message.getSender().getUsername());
+        dto.setSenderRole(message.getSender().getRole());
         dto.setContent(message.getContent());
         dto.setCreatedAt(message.getCreatedAt());
         return dto;
     }
 
-    private User getOrCreateAiUser() {
-        return userRepository.findByUsername("ai_assistant")
+    private User getOrCreateAiChatBot() {
+        return userRepository.findByRole("AI")
                 .orElseGet(() -> {
                     User ai = new User();
                     ai.setUsername("ai_assistant");
                     ai.setEmail("ai@sandbox.local");
                     ai.setPasswordHash("no-password");
+                    ai.setRole("AI");
                     return userRepository.save(ai);
                 });
     }

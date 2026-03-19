@@ -9,6 +9,7 @@ import { useChangeTitle } from "@/utils/breadCrumbUtil";
 import { useSession } from 'next-auth/react';
 import { fetchApi } from '@/utils/api';
 import { API_SANDBOX } from '@/constants/api/ApiSandbox';
+import { useNotification } from '@/context/NotificationContext';
 
 import { useTheme } from "@/context/ThemeContext";
 
@@ -19,9 +20,10 @@ interface Message {
     roomId?: number;
     senderId?: number;
     senderUsername?: string;
+    senderRole?: string;
     content: string;
     createdAt?: string;
-    role?: 'user' | 'assistant';
+    role?: 'AI' | 'USER';
 }
 
 export default function MessagePage() {
@@ -29,6 +31,7 @@ export default function MessagePage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const notification = useNotification();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const ROOM_ID = 2;
@@ -59,11 +62,15 @@ export default function MessagePage() {
             );
             const history = response.map((msg: any) => ({
                 ...msg,
-                role: msg.senderUsername !== 'ai_assistant' ? 'user' : 'assistant',
+                role: msg.senderRole === 'AI' ? 'AI' : 'USER',
             }));
             setMessages(history);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to fetch chat history:', error);
+            notification.error({
+                message: 'Error',
+                description: error?.response?.data?.message || error?.message || 'Failed to fetch chat history',
+            });
         }
     };
 
@@ -72,7 +79,7 @@ export default function MessagePage() {
 
         const newMsg: Message = {
             content: inputText,
-            role: 'user',
+            role: 'USER',
             senderId: CURRENT_USER_ID,
             roomId: ROOM_ID,
         };
@@ -90,11 +97,15 @@ export default function MessagePage() {
 
             const aiMsg: Message = {
                 content: response.reply,
-                role: 'assistant',
+                role: 'AI',
             };
             setMessages((prev) => [...prev, aiMsg]);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to send message:', error);
+            notification.error({
+                message: 'Error',
+                description: error?.response?.data?.message || error?.message || 'Failed to send message',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -138,15 +149,15 @@ export default function MessagePage() {
                 {messages.map((msg, idx) => (
                     <div
                         key={idx}
-                        className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                        className={`flex flex-col ${msg.role === 'USER' ? 'items-end' : 'items-start'}`}
                     >
                         <div className="flex max-w-[70%] gap-2 items-end">
-                            {msg.role === 'assistant' && (
+                            {msg.role === 'AI' && (
                                 <Avatar src="/ai_avatar.png" size={32} className="flex-shrink-0 bg-indigo-50 border border-indigo-100 dark:bg-neutral-800 dark:border-neutral-700" />
                             )}
 
                             <div
-                                className={`p-3 rounded-2xl shadow-sm ${msg.role === 'user'
+                                className={`p-3 rounded-2xl shadow-sm ${msg.role === 'USER'
                                     ? 'bg-blue-600 text-white rounded-br-none'
                                     : 'bg-white dark:bg-neutral-800 text-gray-800 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-neutral-700'
                                     }`}
