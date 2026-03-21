@@ -11,20 +11,20 @@ import {
     SunOutlined
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { theme as antdTheme, Breadcrumb, Button, Layout, Menu } from "antd"; // Import theme จาก antd
+import { theme as antdTheme, Breadcrumb, Layout, Menu } from "antd"; // Import theme จาก antd
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { SidebarButton } from "../common/Button";
 import { LogoutOutlined } from "@ant-design/icons";
-import { useSession, signOut } from "next-auth/react";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
 const { Header, Content, Sider } = Layout;
 
 type MenuItem = Required<MenuProps>["items"][number];
 
 export default function Sidebar({ children }: { children: React.ReactNode }) {
-    const { data: session, status } = useSession();
+    const { data: session, supabase } = useSupabaseSession();
     const { breadCrumb, currentTitle } = useLayoutContext();
     const [collapsed, setCollapsed] = useState(false);
     const { theme, toggleTheme } = useTheme();
@@ -86,7 +86,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
     };
 
     const getOpenKeys = () => {
-        let openKeys: string[] = [];
+        const openKeys: string[] = [];
         const findOpenKey = (items: TitleDetail[], parentKey?: string) => {
             for (const item of items) {
                 const pathLower = pathname.toLowerCase();
@@ -111,19 +111,19 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                 trigger={null}
                 collapsible
                 collapsed={collapsed}
-                theme="light"
+                theme={theme === "dark" ? "dark" : "light"}
             >
                 <div className="relative h-screen">
                     <Header
                         className="flex items-center justify-center relative"
                         style={{ padding: 0, background: colorBgContainer }}
                     >
-                        <a href="/">
+                        <Link href="/">
                             <div className={`flex items-center space-x-2 font-bold text-lg transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
                                 <CodeSandboxOutlined className="text-2xl" />
                                 {!collapsed && <span>SandBox</span>}
                             </div>
-                        </a>
+                        </Link>
                         <button
                             onClick={handleToggleCollapse}
                             className={`transition-all duration-300 ease-in-out transform z-50 flex items-center justify-center cursor-pointer absolute ${collapsed
@@ -140,7 +140,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
                     <div className="flex-1 overflow-y-auto">
                         <Menu
-                            theme="light"
+                            theme={theme === "dark" ? "dark" : "light"}
                             selectedKeys={getSelectedKeys()}
                             defaultOpenKeys={getOpenKeys()}
                             mode="inline"
@@ -169,7 +169,10 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                                 icon={<LogoutOutlined />}
                                 label="Logout"
                                 collapsed={collapsed}
-                                onClick={() => signOut({ callbackUrl: '/login' })}
+                                onClick={async () => {
+                                    await supabase.auth.signOut();
+                                    window.location.href = '/login';
+                                }}
                             />
                         </div>
                     </div>
@@ -198,9 +201,9 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                         {session?.user ? (
                             <div className="flex">
                                 {/* <p className="content-center mr-3 text-xl font-semibold text-gray-800 dark:text-gray-100">{session.user.name}</p> */}
-                                {session.user.image && (
+                                {(session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture) && (
                                     <img
-                                        src={session.user.image}
+                                        src={session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture}
                                         alt="Profile"
                                         className="w-12 h-12 rounded-full shadow-md border-4 border-white dark:border-gray-700"
                                     />

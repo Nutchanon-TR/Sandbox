@@ -2,20 +2,39 @@
 
 import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { TITLE } from "@/constants/Title";
 import { ACCESS_DENIED_MESSAGE, ACCESS_DENIED_DESCRIPTION, PAGE_NOT_FOUND_MESSAGE, PAGE_NOT_FOUND_DESCRIPTION } from "@/constants/Message";
 import { TitleDetail } from "@/interface/common/TitleDetail";
 import { useNotification } from "@/context/NotificationContext";
 import { useLoadingContext } from "@/context/LoadingContext";
+import { createClient } from "@/utils/supabase/client";
 
 export default function NavigateGuardProvider({ children }: { children: React.ReactNode }) {
-    const { status } = useSession();
+    const supabase = createClient();
+    const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
     const pathname = usePathname();
     const router = useRouter();
     const notification = useNotification();
     const { setIsLoading } = useLoadingContext();
     const [isAuthorized, setIsAuthorized] = useState(false);
+
+    useEffect(() => {
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setStatus(session ? "authenticated" : "unauthenticated");
+
+            const { data: authListener } = supabase.auth.onAuthStateChange(
+                (event, session) => {
+                    setStatus(session ? "authenticated" : "unauthenticated");
+                }
+            );
+
+            return () => {
+                authListener.subscription.unsubscribe();
+            };
+        };
+        checkSession();
+    }, [supabase.auth]);
 
     useEffect(() => {
         if (status === "loading") return;
@@ -49,7 +68,7 @@ export default function NavigateGuardProvider({ children }: { children: React.Re
             return;
         }
         setIsAuthorized(true);
-    }, [pathname, status, router]);
+    }, [pathname, status, router, notification]);
 
     useEffect(() => {
         if (status === "loading" || !isAuthorized) {
@@ -66,7 +85,7 @@ export default function NavigateGuardProvider({ children }: { children: React.Re
 }
 
 const getValidPaths = (): string[] => {
-    const paths: string[] = ["/login"];
+    const paths: string[] = ["/login", "/auth/callback"];
 
     const extractPaths = (items: TitleDetail[] | Record<string, TitleDetail>) => {
         const iterable = Array.isArray(items) ? items : Object.values(items);

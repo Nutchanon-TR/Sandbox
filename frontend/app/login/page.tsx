@@ -1,10 +1,21 @@
 'use client'
 
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
 
 export default function LoginPage() {
+    const supabase = createClient();
+
+    const handleOAuthSignIn = async (provider: 'google' | 'facebook' | 'twitter') => {
+        await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+    };
+
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
             {/* Background Image */}
@@ -52,7 +63,7 @@ export default function LoginPage() {
                 <div className="w-full max-w-md backdrop-blur-xl bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 p-8 md:p-10 rounded-[2rem] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
                     <div className="flex flex-col gap-[20px]">
                         <button
-                            onClick={() => signIn('google', { redirectTo: '/' })}
+                            onClick={() => handleOAuthSignIn('google')}
                             className="w-full flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium py-3 rounded-xl transition-all duration-300 active:scale-[0.98]"
                         >
                             <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
@@ -60,7 +71,7 @@ export default function LoginPage() {
                         </button>
 
                         <button
-                            onClick={() => signIn('facebook', { redirectTo: '/' })}
+                            onClick={() => handleOAuthSignIn('facebook')}
                             className="w-full flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium py-3 rounded-xl transition-all duration-300 active:scale-[0.98]"
                         >
                             <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 fill-current">
@@ -70,7 +81,7 @@ export default function LoginPage() {
                         </button>
 
                         <button
-                            onClick={() => signIn('twitter', { redirectTo: '/' })}
+                            onClick={() => handleOAuthSignIn('twitter')}
                             className="w-full flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium py-3 rounded-xl transition-all duration-300 active:scale-[0.98]"
                         >
                             <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 fill-current">

@@ -6,7 +6,6 @@ import { Avatar, Badge, Typography, Input, Button, Space } from 'antd';
 import Image from 'next/image';
 import { TITLE } from "@/constants/Title";
 import { useChangeTitle } from "@/utils/breadCrumbUtil";
-import { useSession } from 'next-auth/react';
 import { fetchApi } from '@/utils/api';
 import { API_SANDBOX } from '@/constants/api/ApiSandbox';
 import { useNotification } from '@/context/NotificationContext';
@@ -27,7 +26,6 @@ interface Message {
 }
 
 export default function MessagePage() {
-    const { data: session, status } = useSession();
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
