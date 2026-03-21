@@ -139,7 +139,7 @@ export default function MessagePage() {
             {/* Chat Area: ยืดเติมพื้นที่ตรงกลางและเลื่อน (Scroll) ได้เมื่อล้น */}
             <div className="flex-1 p-4 space-y-4 relative flex flex-col overflow-y-auto bg-gray-50 dark:bg-neutral-900 font-sans">
                 {messages.length === 0 && !isLoading && (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 mt-20">
+                    <div className="flex flex-col items-center justify-center text-gray-400 m-auto mt-20">
                         <Image src="/ai_avatar.png" alt="AI Avatar" width={80} height={80} className="mb-4 opacity-50" />
                         <p>Say hello to start the conversation!</p>
                     </div>
@@ -161,7 +161,7 @@ export default function MessagePage() {
                                     : 'bg-white dark:bg-neutral-800 text-gray-800 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-neutral-700'
                                     }`}
                             >
-                                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed m-0">
                                     {msg.content}
                                 </p>
                             </div>

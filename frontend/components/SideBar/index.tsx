@@ -127,7 +127,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                         <button
                             onClick={handleToggleCollapse}
                             className={`transition-all duration-300 ease-in-out transform z-50 flex items-center justify-center cursor-pointer absolute ${collapsed
-                                ? `-right-5 w-10 h-10 rounded-sm text-sm shadow-md border-none ${theme === 'dark' ? 'bg-[#141414] text-white' : 'bg-white text-black'}`
+                                ? `-right-5 w-10 h-10 rounded-sm text-sm shadow-md border-none`
                                 : "-right-2 text-sm w-12 h-12 border-none"
                                 }`}
                             style={{
@@ -219,7 +219,6 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                     </div>
                 </Header>
                 <Content className={`${collapsed ? 'ml-10' : 'ml-6'} my-6 flex flex-col overflow-auto`}>
-
                     <div
                         className="p-6 flex-1 shadow-sm transition-colors duration-300 flex flex-col"
                         style={{
