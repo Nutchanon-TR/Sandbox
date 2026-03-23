@@ -7,10 +7,10 @@ import { ACCESS_DENIED_MESSAGE, ACCESS_DENIED_DESCRIPTION, PAGE_NOT_FOUND_MESSAG
 import { TitleDetail } from "@/interface/common/TitleDetail";
 import { useNotification } from "@/context/NotificationContext";
 import { useLoadingContext } from "@/context/LoadingContext";
-import { createClient } from "@/utils/supabase/client";
+import { createSupabaseBrowser } from "@/utils/supabase/client";
 
 export default function NavigateGuardProvider({ children }: { children: React.ReactNode }) {
-    const supabase = createClient();
+    const supabase = createSupabaseBrowser();
     const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
     const pathname = usePathname();
     const router = useRouter();

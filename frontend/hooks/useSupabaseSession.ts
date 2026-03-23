@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createSupabaseBrowser } from "@/utils/supabase/client";
 import { Session } from "@supabase/supabase-js";
 
 export function useSupabaseSession() {
-  const supabase = createClient();
+  const supabase = createSupabaseBrowser();
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 

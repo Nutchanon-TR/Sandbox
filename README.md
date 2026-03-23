@@ -288,6 +288,22 @@ cd backend/dinner
 - ใน repo มีโค้ด backend ซ้ำบางส่วน
 - เอกสาร SQL ใน `database/` ยังไม่สะท้อน schema ใช้งานจริงทั้งหมดของ chat เช่น `role` และ `ai_context`
 
+## บันทึกการย้ายระบบ Auth (NextAuth -> Supabase)
+*(สรุปเจาะลึกการทำงานของฟังก์ชันหลักหลังบ้านที่มีผลกับการทำงานของ Supabase)*
+
+1. **Supabase Client Setup (`utils/supabase`)** 
+   ใช้สร้าง "ท่อเชื่อมต่อ" ไปที่ Supabase project ของเรา แยกเป็นแบบเบราว์เซอร์ (`createSupabaseBrowser()`) และแบบเซิร์ฟเวอร์ (`createSupabaseServer()`) เพื่อความปลอดภัย
+
+2. **Middleware (`middleware.ts`)** 
+   ทำงานเสมือน *Global Navigate Guard* แต่อยู่บน Server (Edge) ทำหน้าที่ดักจับ (Intercept) ทุก Request ที่เปิดเข้ามา เพื่อตรวจสอบและอัปเดตอายุ Cookies ดักทางสำหรับคนยังไม่ล็อกอินให้กระเด็นกลับหน้าหลัก หมดปัญหาข้อมูลกระพริบตอนโหลดหน้าเว็บ
+
+3. **Login & Callback (`app/auth/callback/route.ts`)**
+   หน้า Endpoint สำคัญที่เอาไว้เป็นปลายทางให้ Google Redirect กลับมาหลักกดล็อกอิน โดยมันจะแค่รับรหัสชั่วคราว (`code`) เอาไป "แลก" เป็น Token ตัวจริงที่ฝั่ง Server แบบลับๆ แล้วจับยัดลงคุกกี้ให้อัตโนมัติ ก่อนเด้งหน้าจอไปหาเว็บไซต์จริง
+
+4. **Custom Hook (`hooks/useSupabaseSession.ts`)**
+   ทดแทน `useSession` เดิมด้วยท่า `const { data: session, supabase } = useSupabaseSession()` 
+   ท่านี้คือ Object Destructuring ที่คืนค่าผู้ใช้งานมาในชื่อ `session` และเครื่องมือสั่งงานฐานข้อมูลในชื่อ `supabase` (ไว้ใช้สั่งล็อกเอาต์ ฯลฯ) นอกจากนี้ยังช่วยรีเฟรชภาพ UI ให้ล็อกอิน/เอาต์ตามแถบอื่นๆ แบบ Real-time
+
 ## สรุป
 
 โปรเจกต์นี้ไม่ได้ทำมาเพื่อเป็น product สำเร็จรูป แต่ทำมาเพื่อทดลอง integration หลายเรื่องในระบบเดียวโดยใช้แนวคิด microservice ได้แก่ auth, dashboard, AI chat, database access, object storage และ cross-service flow ระหว่าง frontend กับ backend หลายตัว ถ้าจะต่อยอด โปรเจกต์นี้เหมาะเป็นฐานสำหรับแยก service ให้ชัดขึ้น, เติม API gateway/service discovery, แยก config ต่อ environment และทำ deployment pipeline จริง

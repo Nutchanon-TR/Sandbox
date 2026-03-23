@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@/utils/supabase/client";
+import { createSupabaseBrowser } from "@/utils/supabase/client";
 
 export default function LoginPage() {
-    const supabase = createClient();
+    const supabase = createSupabaseBrowser();
 
     const handleOAuthSignIn = async (provider: 'google' | 'facebook' | 'twitter') => {
         await supabase.auth.signInWithOAuth({
