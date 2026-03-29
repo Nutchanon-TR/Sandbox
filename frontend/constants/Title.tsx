@@ -17,37 +17,33 @@ export const TITLE: Record<string, TitleDetail> = {
         urlPath: "/",
         icon: <HomeOutlined />,
     },
-    BLOG: {
-        title: "Blog",
-        urlPath: "/blog",
+    B_POST: {
+        title: "B-Post",
         icon: <DesktopOutlined />,
-    },
-    DASHBOARD: {
-        title: "Dashboard",
-        icon: <PieChartOutlined />,
         subTitles: [
-            { title: "Supplier", urlPath: "/dashboard/supplier", key: "SUPPLIER" },
-            { title: "Profile", urlPath: "/dashboard/profile", key: "PROFILE" },
+            { title: "Blog", urlPath: "/b-post/blog", key: "BLOG" },
+            { title: "Message", urlPath: "/b-post/message", key: "MESSAGE" },
         ],
     },
-    MESSAGE: {
-        title: "Message",
-        urlPath: "/message",
+    DINNER: {
+        title: "Dinner",
+        icon: <PieChartOutlined />,
+        subTitles: [
+            { title: "Supplier", urlPath: "/dinner/supplier", key: "SUPPLIER" },
+            { title: "Profile", urlPath: "/dinner/profile", key: "PROFILE" },
+        ],
+    },
+    CHAT_APP: {
+        title: "Chat App",
         icon: <MessageOutlined />,
+        subTitles: [
+            { title: "Message", urlPath: "/chat-app/supplier", key: "SUPPLIER" },
+            { title: "Social", urlPath: "/chat-app/profile", key: "PROFILE" },
+        ],
     },
     PROFILE: {
         title: "Profile",
         urlPath: "/profile",
         icon: <UserOutlined />,
-    },
-    SOCIAL: {
-        title: "Social",
-        urlPath: "/social",
-        icon: <TeamOutlined />,
-    },
-    BUILD: {
-        title: "Build",
-        urlPath: "/build",
-        icon: <BuildOutlined />,
     },
 }
