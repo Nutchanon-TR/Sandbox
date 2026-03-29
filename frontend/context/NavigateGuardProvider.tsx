@@ -7,7 +7,7 @@ import { ACCESS_DENIED_MESSAGE, ACCESS_DENIED_DESCRIPTION, PAGE_NOT_FOUND_MESSAG
 import { TitleDetail } from "@/interface/common/TitleDetail";
 import { useNotification } from "@/context/NotificationContext";
 import { useLoadingContext } from "@/context/LoadingContext";
-import { createSupabaseBrowser } from "@/utils/supabase/client";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 export default function NavigateGuardProvider({ children }: { children: React.ReactNode }) {
     const supabase = createSupabaseBrowser();
@@ -80,7 +80,7 @@ export default function NavigateGuardProvider({ children }: { children: React.Re
 
     // Do not return children until fully authorized (the global loading screen will cover the screen)
     if (status === "loading" || !isAuthorized) return null;
-    
+
     return <>{children}</>;
 }
 
@@ -98,7 +98,7 @@ const getValidPaths = (): string[] => {
             }
         }
     };
-    
+
     extractPaths(TITLE);
     return paths;
 };

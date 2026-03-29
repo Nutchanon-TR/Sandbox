@@ -1,47 +1,50 @@
-# Supabase Implementation Specification
+# ข้อมูลจำเพาะของการทำงานเชื่อมต่อกับ Supabase
 
-This document details all the logic, architecture, and specifications related to Supabase integration within the Sandbox project. It covers both the Frontend (Next.js) and Backend (Spring Boot) implementations.
+เอกสารฉบับนี้อธิบายรายละเอียดเกี่ยวกับลอจิก สถาปัตยกรรม และข้อมูลจำเพาะที่เกี่ยวข้องกับการเชื่อมต่อระบบ Supabase ภายในโปรเจกต์ Sandbox ซึ่งครอบคลุมทั้งในส่วนของ Frontend (Next.js) และ Backend (Spring Boot)
 
-## 1. Frontend Integration (Next.js)
+## 1. การเชื่อมต่อส่วนหน้า (Frontend Integration - Next.js)
 
-The frontend uses `@supabase/ssr` to implement robust server-side rendering support for Supabase Authentication, paired with `@supabase/supabase-js` for browser-based operations.
+ฝั่ง Frontend มีการใช้ `@supabase/ssr` เพื่อรองรับการทำ Server-Side Rendering (SSR) ของระบบการยืนยันตัวตน (Authentication) เพื่อความปลอดภัยสูงสุด ร่วมกับการใช้ `@supabase/supabase-js` สำหรับการทำงานที่เกี่ยวข้องกับฝั่งเบราว์เซอร์
 
-### 1.1 Auth Clients
-Supabase requires different client initializers depending on the rendering context.
+### 1.1 Auth Clients (ตัวจัดการฝั่งไคลเอ็นต์)
+Supabase จำเป็นต้องอาศัยตัวจัดการเริ่มต้น (client initializers) ที่แตกต่างกันขึ้นอยู่กับบริบทและสถานที่การเรนเดอร์:
 
 - **Browser Client (`utils/supabase/client.ts`)**
-  Uses `createBrowserClient(URL, ANON_KEY)`. It relies on browser cookies that have already been set. It is used in Client Components.
+  เรียกใช้ฟังก์ชัน `createBrowserClient(URL, ANON_KEY)` ซึ่งจำเป็นต้องพึ่งพาคุกกี้บนเบราว์เซอร์ที่มีการตั้งค่าไว้ก่อนแล้ว มักจะถูกนำไปใช้ในฝั่ง Client Components ขนานแท้
 - **Server Client (`utils/supabase/server.ts`)**
-  Uses `createServerClient(URL, ANON_KEY, { cookies })`. Since Server Components cannot write to cookies, it reads from `cookies().getAll()`.
+  เรียกใช้ฟังก์ชัน `createServerClient(URL, ANON_KEY, { cookies })` เนื่องจากบนฮุคของ Server Components หรือ API Route ไม่สามารถเขียนคุกกี้โดยตรงได้ จึงจำเป็นต้องอ่านและดึงข้อมูลจากการเรียกใช้คำสั่ง `cookies().getAll()` ตามโครงสร้างใหม่ของ Next.js
 
 ### 1.2 Auth State Hook (`hooks/useSupabaseSession.ts`)
-A custom React hook (`useSupabaseSession`) used for accessing user session data across client components.
-- **Logic:** Calls `getSession()` on initial mount and subscribes to `onAuthStateChange` to listen to token refreshes or login/logout events.
-- **Provides:**
-  - `data` (The current `Session` object if logged in, otherwise `null`).
-  - `status` (`"loading" | "authenticated" | "unauthenticated"`).
-  - `supabase` (The browser client instance for executing DB/Auth functions).
+เป็น Custom React hook (`useSupabaseSession`) ที่สร้างไว้เพื่อแชร์ข้อมูลและตรวจสอบเซสชันผู้ใช้งานเพื่อใช้ร่วมกับไคลเอ็นต์ในหน้าที่ต้องการ
+- **Logic (ลอจิกการทำงาน):** ตัว hook จะเรียก `getSession()` ทันทีตอนที่เรนเดอร์คอมโพเนนต์ครั้งแรก และทำการ subscribe ติดตามค่าตัวแปรจากเหตุการณ์ `onAuthStateChange` เพื่อให้คอยฟังว่าโทเค็นหมดอายุหรือมีการเปลี่ยนแปลงการสถานะเข้าสู่ระบบ/ออกจากระบบหรือไม่
+- **ค่าที่คืนกลับ:**
+  - `data` (เก็บ Session object ของยูสเซอร์ล่าสุด หากไม่มีสิทธิจะคืนค่ากลับมาเป็น `null`)
+  - `status` (สถานะการโหลดข้อมูลปัจจุบัน สามารถมีค่าเป็น `"loading" | "authenticated" | "unauthenticated"`)
+  - `supabase` (อินสแตนซ์ของ browser client ที่สามารถดึงมาเพื่อนำไปเรียกใช้คำสั่งอื่นๆ หรือ logout ต่อไป)
 
-### 1.3 Route Guarding (`middleware.ts`)
-Next.js Middleware intercepts requests before they hit the page logic to secure private routes.
-- **Session Refresh:** Reads cookies, initializes `createServerClient`, intercepts and attaches the latest session. Runs `supabase.auth.getUser()`.
-- **Protected Paths:** All paths except `/login`, `/auth`, and `/` remain protected. Unauthenticated users are redirected to `/login`.
-- **Guest Paths:** If an authenticated user attempts to access `/login`, they are automatically redirected back to `/`.
+### 1.3 การจัดการและปกป้องพาธ (`middleware.ts`)
+Next.js Middleware จะใช้สำหรับดักจับการรีเควสต์ทุกครั้งก่อนโหลดหน้าใหม่ (Edge) เพื่อปกป้อง Private Routes จากเข้าถึงที่ไม่ได้รับอนุญาต
+- **Session Refresh:** อ่านตรวจสอบคุกกี้ เรียกใช้งาน `createServerClient` ดักอิมพลีเมนต์การรีเควสต์ แล้วต่ออายุค่าเซสชันและทำการรันคำสั่ง `supabase.auth.getUser()`
+- **Protected Paths:** ทุกๆ พาธการใช้งานภายในระบบ ยกเว้นหน้า `/login`, `/auth`, และ `/` จะเป็นพื้นที่ป้องกัน หากผู้ใช้งานที่ไม่ได้ล็อกอินหลงเข้ามาจะถูก redirect ไปยังเตะไปที่หน้า `/login`
+- **Guest Paths:** หากผู้ใช้งานที่ทำการล็อกอินไว้แล้ว พยายามจะเข้าหน้าระบบเชิญอย่าง `/login` ระบบจะอัตโนมัติ redirect พาผู้ใช้งานย้อนไปที่หน้า `/` ทันที
 
 ### 1.4 OAuth Callback (`app/auth/callback/route.ts`)
-Used as an endpoint to verify PKCE auth codes exchanged during OAuth, Magic Link, or typical signups.
-- Extracts `code` and `next` (redirect url) from search params.
-- Calls `supabase.auth.exchangeCodeForSession(code)` on the Server client.
-- Automatically stores auth cookies and redirects the user to the `next` route on success or `/login?error=auth-code-exchange` on failure.
+มักถูกใช้งานเป็น endpoint API โดยเฉพาะที่ใช้ยืนยันจัดการรหัสผ่านประเภท PKCE เพื่อเข้าสู่ระบบ (เช่นกลับมาจาก Google OAuth, Magic Link เป็นต้น) 
+- **ข้อควรรู้เรื่องชื่อ Route:** ชื่อโฟลเดอร์ในโปรเจกต์ไม่จำเป็นต้องเป็น `auth/callback` เสมอไป สามารถตั้งชื่อเป็นอะไรก็ได้ตามความเหมาะสม (เช่น `login/verify` หรือ `confirm`) แต่มีข้อแม้คือ **คุณต้องนำ URL พาธที่ตั้งใหม่นี้ ไปอัปเดตช่อง Redirect URI ในหน้าตั้งค่าของ Supabase Dashboard ให้ตรงกันด้วย**
+- **ขั้นตอนการทำงาน:**
+  - ดึงรหัสพารามิเตอร์ `code` และตัวแปรพาธ `next` (ที่จะทำการ redirect ต่อไป) จาก URL parameters
+  - รับไปดำเนินการต่อด้วยคำสั่ง `supabase.auth.exchangeCodeForSession(code)` แลกเป็นเซสชันลงบน Server client
+  - กรณีสำเร็จ จะปั๊มเป็นคุกกี้การรับรองล็อกอินอัตโนมัติลงใน Headers แล้วเด้งเปลี่ยนผู้ใช้ไปยังหน้าที่ระบุในสเตตัสพารามิเตอร์ `next`
+  - ในกรณีล้มเหลว จะวิ่งไปที่หน้า `/login?error=auth-code-exchange` ทันที
 
 ---
 
-## 2. Backend Integration (Spring Boot)
+## 2. การเชื่อมต่อส่วนหลัง (Backend Integration - Spring Boot)
 
-The backend applications (`chat`, `dinner`) utilize Supabase's underlying Postgres Database directly and make explicit REST API calls to Supabase Storage.
+ฝั่งลอจิกแอปพลิเคชันแบ็กเอนด์ (เช่น Microservice ของ `chat`, และ `dinner`) นำฐานข้อมูล Postgres ของทาง Supabase มาเชื่อมกันตรงๆ แบบ Native Connection และพึ่งพากระบวนการร้องขอผ่าน REST API ภายนอกเพื่อย้ายไฟล์แนบเข้าไปยัง Supabase Storage
 
 ### 2.1 Database (PostgreSQL)
-Since Supabase exposes a native Postgres connection, the Spring configurations connect to Supabase DB via JDBC.
+สืบเนื่องจากตัว Supabase ซัพพอร์ตการต่อเข้าฐานข้อมูล Postgres ดั้งเดิม การตั้งค่าปรับแต่งบนโปรเจ็ค Spring จึงสามารถเรียกใช้การประมวลผลเชื่อมไปยังฐานข้อมูล Supabase ได้ใต้ตัวเชื่อมโปรโตคอล JDBC แบบตรงไปตรงมา
 - **Configuration** (`application.yml`):
   ```yaml
   datasource:
@@ -49,30 +52,32 @@ Since Supabase exposes a native Postgres connection, the Spring configurations c
     username: ${SUPABASE_DB_USERNAME}
     password: ${SUPABASE_DB_PASSWORD}
   ```
-- **Usage:** Managed primarily by Spring Data JPA and Hibernate. DDL Auto is typically set to `none` as schema operations should be run via migrations elsewhere.
+- **การประยุกต์ใช้งาน:** การจัดเก็บและปรับปรุงมักจะถูกครอบคุมเอาไว้ทำผ่านตัว Spring Data JPA ร่วมกันกับ Hibernate ซึ่งโหมดสำหรับอัปเดตสกีมาข้อมูลอย่าง `DDL Auto` ก็จะตั้งตัวเลือกเป็น `none` เป็นส่วนใหญ่ เนื่องจากขั้นตอนการแก้ไขสกีมา จะถูกให้ทำผ่านตัวจัดการเครื่องมือฐานข้อมูลเฉพาะอื่นๆ แทน
 
-### 2.2 Storage / Blobs (`BlobStorageService.java`)
-The backend is responsible for uploading files to Supabase Storage.
-- **REST Implementation:** Unlike standard SDKs, the project uploads directly to Supabase Storage API using Spring's `RestTemplate`.
-- **Upload Flow:**
-  - Posts file to `[SUPABASE_URL]/storage/v1/object/[BUCKET_NAME]/[FILE_NAME]`.
-  - Appends headers:
+### 2.2 โกดังเก็บไฟล์/Blobs (`BlobStorageService.java`)
+ตัวแบ็กเอนด์จำเป็นที่จะต้องสามารถรับทำหน้าที่เพิ่มอัปโหลดรูปและอื่นๆ ลงโกดังของ Supabase Storage ได้ด้วยเช่นกัน
+- **REST Implementation:** ฟีเจอร์นี้ จะแตกต่างจากการพับลิกผ่าน Java SDKs ตรงกันข้ามโดยในระบบของโปรเจกต์นี้จะยิงคำขอ Post ตรงไปยัง API โดยตรงด้วยตัว `RestTemplate` ของ Spring เอง
+- **Upload Flow (ขั้นตอนอัปโหลด):**
+  - มีการรับไฟล์ที่อัปโหลดและส่งคำขอไปยังฟอร์มที่ระบุไว้ คือ `[SUPABASE_URL]/storage/v1/object/[BUCKET_NAME]/[FILE_NAME]`.
+  - เพิ่ม Headers เฉพาะที่ต้องใช้ในการคุ้มครองระบบ คือ:
     - `Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
     - `apikey: ${SUPABASE_SERVICE_ROLE_KEY}`
-  - Returns a byte stream of the file equivalent to legacy Azure flows.
+  - และท้ายที่สุดจะส่งผลลัพธ์ย้อนเป็นรูปแบบในชนิด File ByteArray กลับคืนมา (ซึ่งมีที่มาจากความตั้งใจเดิมตอนใช้งานกับตัว Azure มาก่อน)
 - **Public URL Generation:**
-  - Generates asset URLs via standard routing:
+  - สร้างคืนจำลองสตริง URL ใหม่เป็นรูปแบบหน้าที่พร้อมสำหรับการนำไปเปิดแสดงผลผ่าน CDN:
     `[SUPABASE_URL]/storage/v1/object/public/[BUCKET_NAME]/[FILE_NAME]`
 
-## 3. Environment Variables Required
+---
 
-For full operation, the application requires the following environment mappings across stacks:
+## 3. สภาพแวดล้อมระบบที่ต้องใช้งานและตัวแปรตั้งค่า (Environment Variables)
 
-**Frontend (.env):**
-- `NEXT_PUBLIC_SUPABASE_URL` (Starts with https://xabewjiiewyhhjfekazv.supabase.co)
+เพื่อให้ตัวระบบและลอจิกดังกล่าวนี้สามารถขับเคลื่อนทำงานให้ได้อย่างเต็มประสิทธิภาพ การตั้งค่ายืนยันในระบบต้องการตัวแปรสภาพแวดล้อมเป็นดังตัวแปรต่างๆ ดังนี้ในทั้งส่วนหน้าและหลังบ้าน:
+
+**Frontend (.env ตัวแปรหลัก):**
+- `NEXT_PUBLIC_SUPABASE_URL` (ขึ้นต้นรูปแบบเริ่มด้วย https://xabewjiiewyhhjfekazv.supabase.co)
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-**Backend (Runtime Env Settings):**
+**Backend (ตัวแปรสำหรับตั้งค่าใน Runtime ของ Spring Boot):**
 - `SUPABASE_DB_USERNAME`
 - `SUPABASE_DB_PASSWORD`
 - `SUPABASE_SERVICE_ROLE_KEY`

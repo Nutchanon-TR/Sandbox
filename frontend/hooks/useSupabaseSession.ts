@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSupabaseBrowser } from "@/utils/supabase/client";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Session } from "@supabase/supabase-js";
 
 export function useSupabaseSession() {
@@ -17,7 +17,7 @@ export function useSupabaseSession() {
         setStatus(initialSession ? "authenticated" : "unauthenticated");
       }
     }
-    
+
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {

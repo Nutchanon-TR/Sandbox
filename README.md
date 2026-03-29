@@ -53,19 +53,18 @@
 - เรียก backend API ผ่าน `NEXT_PUBLIC_API_URL`
 - มี context กลางสำหรับ theme, notification, loading และ breadcrumb
 
-หน้าใช้งานที่มีจริงในตอนนี้
+หน้าใช้งานหลักในปัจจุบัน
 
 - `/login` สำหรับ OAuth login
 - `/` หน้า home
 - `/profile` หน้า profile จาก Supabase session
-- `/dashboard/supplier` dashboard สำหรับดู supplier orders
-- `/message` หน้าแชตกับ AI
-- `/blog` และ `/dashboard/profile` เป็นหน้า placeholder
 
-เมนูที่ยังเป็น placeholder ตาม sidebar
+ส่วนของระบบย่อย (ตามโครงสร้าง Sidebar ใหม่) มีกลุ่มการทำงานหลัก ดังนี้:
+- **B-Post (บล็อกและโซเชียล):** `/b-post/blog`, `/b-post/socials`, `/b-post/messages`
+- **Dinner (ระบบสั่งอาหารซัพพลายเออร์):** `/dinner/supplier`
+- **Chat App (คุยกับ AI):** `/chat-app/message`, `/chat-app/social`
 
-- `/social`
-- `/build`
+*(บางหน้าอาจจะยังเป็น placeholder รอการพัฒนาในอนาคต)*
 
 ### 2. Chat Service
 
@@ -147,7 +146,7 @@ flow นี้มีอยู่ฝั่ง backend แล้ว แต่ fron
 
 ### Flow 2: Supplier Dashboard
 
-1. ผู้ใช้เปิด `/dashboard/supplier`
+1. ผู้ใช้เปิด `/dinner/supplier`
 2. หน้า React เรียก `GET /v1/api/supplier-order/inquiry`
 3. `SupplierOrderController` รับ pagination request
 4. `SupplierOrderService` เรียก native query จาก `SupplierRepository`
@@ -163,7 +162,7 @@ flow นี้มีอยู่ฝั่ง backend แล้ว แต่ fron
 
 ### Flow 3: AI Chat
 
-1. ผู้ใช้เปิด `/message`
+1. ผู้ใช้เปิด `/chat-app/message`
 2. frontend โหลด history ด้วย `GET /v1/api/chat/history/1`
 3. backend อ่านข้อความใน room และ map เป็น DTO
 4. เมื่อผู้ใช้ส่งข้อความ frontend ยิง `POST /v1/api/chat`
@@ -288,21 +287,9 @@ cd backend/dinner
 - ใน repo มีโค้ด backend ซ้ำบางส่วน
 - เอกสาร SQL ใน `database/` ยังไม่สะท้อน schema ใช้งานจริงทั้งหมดของ chat เช่น `role` และ `ai_context`
 
-## บันทึกการย้ายระบบ Auth (NextAuth -> Supabase)
-*(สรุปเจาะลึกการทำงานของฟังก์ชันหลักหลังบ้านที่มีผลกับการทำงานของ Supabase)*
+## ข้อมูลจำเพาะของระบบ Supabase (Supabase Specification)
 
-1. **Supabase Client Setup (`utils/supabase`)** 
-   ใช้สร้าง "ท่อเชื่อมต่อ" ไปที่ Supabase project ของเรา แยกเป็นแบบเบราว์เซอร์ (`createSupabaseBrowser()`) และแบบเซิร์ฟเวอร์ (`createSupabaseServer()`) เพื่อความปลอดภัย
-
-2. **Middleware (`middleware.ts`)** 
-   ทำงานเสมือน *Global Navigate Guard* แต่อยู่บน Server (Edge) ทำหน้าที่ดักจับ (Intercept) ทุก Request ที่เปิดเข้ามา เพื่อตรวจสอบและอัปเดตอายุ Cookies ดักทางสำหรับคนยังไม่ล็อกอินให้กระเด็นกลับหน้าหลัก หมดปัญหาข้อมูลกระพริบตอนโหลดหน้าเว็บ
-
-3. **Login & Callback (`app/auth/callback/route.ts`)**
-   หน้า Endpoint สำคัญที่เอาไว้เป็นปลายทางให้ Google Redirect กลับมาหลักกดล็อกอิน โดยมันจะแค่รับรหัสชั่วคราว (`code`) เอาไป "แลก" เป็น Token ตัวจริงที่ฝั่ง Server แบบลับๆ แล้วจับยัดลงคุกกี้ให้อัตโนมัติ ก่อนเด้งหน้าจอไปหาเว็บไซต์จริง
-
-4. **Custom Hook (`hooks/useSupabaseSession.ts`)**
-   ทดแทน `useSession` เดิมด้วยท่า `const { data: session, supabase } = useSupabaseSession()` 
-   ท่านี้คือ Object Destructuring ที่คืนค่าผู้ใช้งานมาในชื่อ `session` และเครื่องมือสั่งงานฐานข้อมูลในชื่อ `supabase` (ไว้ใช้สั่งล็อกเอาต์ ฯลฯ) นอกจากนี้ยังช่วยรีเฟรชภาพ UI ให้ล็อกอิน/เอาต์ตามแถบอื่นๆ แบบ Real-time
+สำหรับรายละเอียดลอจิกทั้งหมดที่เกี่ยวข้องกับระบบเบื้องหลังของ Supabase ทั้งการ Authentication, Middleware, Database Connection และ Upload Storage แยกตามส่วน Frontend และ Backend สามารถอ่านแบบละเอียดเพิ่มเติมได้ที่ไฟล์ [SUPABASE.md](./SUPABASE.md)
 
 ## สรุป
 

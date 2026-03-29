@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { createSupabaseBrowser } from "@/utils/supabase/client";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 export default function LoginPage() {
     const supabase = createSupabaseBrowser();
