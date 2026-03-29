@@ -11,14 +11,17 @@
 
 ## Phase 2: Caching (Redis Integration)
 เป้าหมาย: เพิ่มแคช (Cache) เพื่อลดภาระของ Database และลดเวลาในการโหลด (Latency)
-- `[ ]` **Spin up Redis Contianer:** เพิ่ม Image Redis เข้ามาในระบบ 
-- `[ ]` **Integrate Redis with Chat Service:** แก้ไข Spring Boot (Chat) ให้ตรวจสอบแคชก่อนโหลดประวัติแชต หาก Cache Miss (ไม่เจอ) จึงค่อยไปดึง Database และนำผลกลับมาเก็บลงแคช
-- `[ ]` **Integrate Redis with Dinner Service:** นำแคชไปประยุกต์ใช้เพื่อเก็บผลลัพธ์ Supplier Orders ที่ถูกดึงมาบ่อยๆ (เพื่อเสิร์ฟไวขึ้น)
+- `[x]` **Spin up Redis Contianer:** เพิ่ม Image Redis เข้ามาในระบบ 
+- `[x]` **Integrate Redis with Chat Service:** แก้ไข Spring Boot (Chat) ให้ตรวจสอบแคชก่อนโหลดประวัติแชต หาก Cache Miss (ไม่เจอ) จึงค่อยไปดึง Database และนำผลกลับมาเก็บลงแคช
+- `[x]` **Integrate Redis with Dinner Service:** นำแคชไปประยุกต์ใช้เพื่อเก็บผลลัพธ์ Supplier Orders ที่ถูกดึงมาบ่อยๆ (เพื่อเสิร์ฟไวขึ้น)
 
 ## Phase 2.5: Virtual Machine Sandbox & Build
 เป้าหมาย: จำลองสภาพแวดล้อมคล้ายจริงและแก้ไขข้อจำกัดการ Build ออฟไลน์ โดยการรันโปรเจกต์บนระบบเซิร์ฟเวอร์จำลอง (Virtual Machine)
-- `[ ]` **Provision a Virtual Machine:** เตรียมและตั้งค่าระบบปฏิบัติการผ่าน VM (เช่น Azure VM, AWS EC2, หรือ Local Hyper-V/VirtualBox) สำหรับเป็น Build Server
-- `[ ]` **Build and Test in VM:** ย้ายการประมวลผลคำสั่ง `docker-compose up -d --build` ไปทำบน VM เพื่อทดสอบประสิทธิภาพและการรันของจริงใน Environment แบบ Clean
+- `[ ]` **Provision a Virtual Machine:** เตรียมและตั้งค่าระบบปฏิบัติการผ่าน VM พร้อมติดตั้งเครื่องมือพื้นฐาน (`Docker`, `Docker Compose`, `Git`)
+- `[ ]` **Environment Variables Configuration:** เตรียมไฟล์ `.env` ที่จำเป็น (เช่น ตัวแปร Supabase) และ **สำคัญที่สุดคือการเปลี่ยน `NEXT_PUBLIC_API_URL` ให้ชี้ไปยัง Public IP ของ VM แทนที่จะเป็น `localhost`** เพื่อให้เบราว์เซอร์ผู้ใช้ยิง Request เข้า Nginx บน VM ได้ถูกต้อง
+- `[ ]` **Backend CORS Update:** แก้ไขไฟล์ `application.yml` ใน Spring Boot ทั้งหมดโดยเพิ่ม Public IP/Domain ของ VM เข้าไปใน `allowedOrigins` เพื่อป้องกันสิทธิ์การเข้าถึง (CORS Error)
+- `[ ]` **Network & Firewall Setup:** เปิดพอร์ต (Port Forwarding / Inbound Rules) ยกตัวอย่างเช่น HTTP (80) และ HTTPS (443) บน Firewall ของผู้ให้บริการ VM
+- `[ ]` **Build and Test in VM:** โคลนโค้ดลง VM และนำร่องประมวลผลคำสั่ง `docker-compose up -d --build` เพื่อรัน Production-like Environment
 
 ## Phase 3: AI & Vector Database Completeness
 เป้าหมาย: เติมเต็มพลังงานขับเคลื่อนแชตตามแผนการค้นหาเวกเตอร์
