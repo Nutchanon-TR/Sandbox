@@ -20,9 +20,4 @@ public class ReportController {
         log.info("Start uploading image file");
         return blobStorageService.uploadImage(file);
     }
-
-    @GetMapping("/hi")
-    public String hi() {
-        return "hi";
-    }
 }

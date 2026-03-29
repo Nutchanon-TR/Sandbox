@@ -26,10 +26,13 @@
 3. `backend/dinner/`
    Spring Boot service สำหรับ supplier order dashboard
 
-4. `database/`
+4. `backend/bpost/`
+   Spring Boot service สำหรับรับฝากและอัปโหลดรูปภาพ (Storage Image) ขึ้น Supabase Storage อย่างปลอดภัย
+
+5. `database/`
    SQL สำหรับ schema ตัวอย่างของโดเมน `chat` และ `dinner`
 
-> หมายเหตุ: ใน repo มีโฟลเดอร์ `backend/dinner/chat/` ที่เป็นชุดไฟล์ซ้ำอีกชุดหนึ่ง ปัจจุบันเอกสารนี้อ้างอิง service หลักจาก `backend/chat/` และ `backend/dinner/`
+> หมายเหตุ: ใน repo มีโฟลเดอร์ `backend/dinner/chat/` ที่เป็นชุดไฟล์ซ้ำอีกชุดหนึ่ง ปัจจุบันเอกสารนี้อ้างอิง service หลักจาก `backend/chat/`, `backend/dinner/` และ `backend/bpost/`
 
 ## Tech Stack
 
@@ -124,11 +127,11 @@ response จะอยู่ในรูป
 }
 ```
 
-### 4. Report / Storage Flow
+### 4. B-Post Service (Report / Storage Flow)
 
-ใน backend มี API สำหรับอัปโหลดไฟล์ภาพขึ้น Supabase Storage
+ระบบ backend มี API สำหรับเป็นตัวรับฝากอัปโหลดไฟล์ภาพขึ้น Supabase Storage โดยอาศัย B-Post Service เป็นหน่วยจัดการไฟล์ภาพ
 
-- `POST /v1/api/report/upload-image`
+- `POST /v1/api/bpost/upload-image`
 
 flow นี้มีอยู่ฝั่ง backend แล้ว แต่ frontend ยังไม่ได้เชื่อมต่อจริงครบทั้งหน้าใช้งาน
 
@@ -182,9 +185,9 @@ flow นี้มีอยู่ฝั่ง backend แล้ว แต่ fron
 - AI integration แบบ backend-driven
 - persistence ของข้อความในห้องสนทนา
 
-### Flow 4: Image Upload
+### Flow 4: Image Upload (B-Post)
 
-1. client ส่ง multipart file ไปที่ `/v1/api/report/upload-image`
+1. client ส่ง multipart file ไปที่ `/v1/api/bpost/upload-image`
 2. backend สร้างชื่อไฟล์ใหม่ด้วย UUID
 3. backend ใช้ service role key ยิง REST ไป Supabase Storage
 4. backend ส่งไฟล์กลับเป็น `ByteArrayResource`
@@ -197,6 +200,7 @@ flow นี้เป็น sandbox สำหรับทดลอง storage int
 Sandbox/
 |- frontend/                 Next.js app
 |- backend/
+|  |- bpost/                 Storage image service
 |  |- chat/                  Chat + report/upload service
 |  |- dinner/                Supplier order service
 |  \- dinner/chat/           duplicate snapshot
@@ -219,7 +223,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
 ### Backend
 
-ทั้ง `backend/chat` และ `backend/dinner` ใช้ชุดตัวแปรใกล้กัน
+ทั้ง `backend/chat`, `backend/dinner` และ `backend/bpost` ใช้ชุดตัวแปรใกล้กัน
 
 ```env
 SUPABASE_DB_USERNAME=...
@@ -254,7 +258,7 @@ cd backend/dinner
 
 ## ข้อควรรู้ก่อนรัน
 
-- ทั้ง `backend/chat` และ `backend/dinner` ยังไม่ได้ตั้ง `server.port` แยกกันใน repo ปัจจุบัน ถ้าจะรันพร้อมกันต้องกำหนด port เพิ่มเอง
+- ทั้ง `backend/chat`, `backend/dinner` และ `backend/bpost` ยังไม่ได้ตั้ง `server.port` แยกกันใน repo ปัจจุบัน ถ้าจะรันพร้อมกันต้องกำหนด port เพิ่มเอง
 - frontend เรียก backend ผ่าน base URL เดียวจาก `NEXT_PUBLIC_API_URL`
 - database script ใน `database/` เป็นตัวอย่าง schema/seed สำหรับโดเมนงาน แต่ config ปัจจุบันของ backend ชี้ไปที่ PostgreSQL บน Supabase
 - chat flow ต้องมีข้อมูลห้อง, user และ `chat.ai_context` อยู่ในฐานข้อมูล ไม่เช่นนั้น backend จะตอบ error
@@ -266,7 +270,7 @@ cd backend/dinner
 | Chat | `GET` | `/v1/api/chat/history/{roomId}` | โหลดประวัติแชต |
 | Chat | `POST` | `/v1/api/chat` | ส่งข้อความและรับคำตอบจาก AI |
 | Supplier | `GET` | `/v1/api/supplier-order/inquiry` | โหลด supplier orders แบบแบ่งหน้า |
-| Report | `POST` | `/v1/api/report/upload-image` | อัปโหลดรูปไป Supabase Storage |
+| B-Post | `POST` | `/v1/api/bpost/upload-image` | อัปโหลดรูปภาพไป Supabase Storage |
 
 ## สถานะปัจจุบันของโปรเจกต์
 
