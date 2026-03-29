@@ -20,8 +20,10 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 @Service
 public class ChatService {
@@ -45,6 +47,8 @@ public class ChatService {
         this.chatClient = chatClientBuilder.build();
     }
 
+    // [Phase 2 Prototype]: Cache this method to avoid DB hits
+    @Cacheable(value = "chatHistory", key = "#roomId")
     public List<MessageDto> getChatHistoryByRoom(Long roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
@@ -55,6 +59,8 @@ public class ChatService {
                 .collect(Collectors.toList());
     }
 
+    // [Phase 2 Prototype]: Evict cache when new message arrives
+    @CacheEvict(value = "chatHistory", key = "#request.roomId")
     public String getAiResponse(ChatRequestDto request) {
         // STEP 1: Validate and find room
         Long reqRoomId = request.getRoomId();

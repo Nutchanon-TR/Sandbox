@@ -15,6 +15,11 @@
 - `[ ]` **Integrate Redis with Chat Service:** แก้ไข Spring Boot (Chat) ให้ตรวจสอบแคชก่อนโหลดประวัติแชต หาก Cache Miss (ไม่เจอ) จึงค่อยไปดึง Database และนำผลกลับมาเก็บลงแคช
 - `[ ]` **Integrate Redis with Dinner Service:** นำแคชไปประยุกต์ใช้เพื่อเก็บผลลัพธ์ Supplier Orders ที่ถูกดึงมาบ่อยๆ (เพื่อเสิร์ฟไวขึ้น)
 
+## Phase 2.5: Virtual Machine Sandbox & Build
+เป้าหมาย: จำลองสภาพแวดล้อมคล้ายจริงและแก้ไขข้อจำกัดการ Build ออฟไลน์ โดยการรันโปรเจกต์บนระบบเซิร์ฟเวอร์จำลอง (Virtual Machine)
+- `[ ]` **Provision a Virtual Machine:** เตรียมและตั้งค่าระบบปฏิบัติการผ่าน VM (เช่น Azure VM, AWS EC2, หรือ Local Hyper-V/VirtualBox) สำหรับเป็น Build Server
+- `[ ]` **Build and Test in VM:** ย้ายการประมวลผลคำสั่ง `docker-compose up -d --build` ไปทำบน VM เพื่อทดสอบประสิทธิภาพและการรันของจริงใน Environment แบบ Clean
+
 ## Phase 3: AI & Vector Database Completeness
 เป้าหมาย: เติมเต็มพลังงานขับเคลื่อนแชตตามแผนการค้นหาเวกเตอร์
 - `[ ]` **Activate `pgvector`:** เปิดและทดสอบ Extension `pgvector` บนฐานข้อมูล Supabase PostgreSQL
@@ -40,3 +45,6 @@
 เป้าหมาย: สร้างระบบและปกป้องฟีเจอร์จากการบริหารสิทธิ์ (Roles) ของ Supabase
 - `[ ]` **Define RLS Policies:** จัดการ Row-level Security ภายในฐานข้อมูล Supabase ให้ออกสิทธิ์ตาม Session ล็อกอิน
 - `[ ]` **Admin Implementation:** ใช้ตัวแปร `app_metadata.role = admin` ที่ฝังใน JWT Token มากรอง Component ในหน้า Frontend และ Backend ให้ใช้งานฟีเจอร์ลับได้เฉพาะบางระดับผู้ใช้งาน
+
+## Question
+- **Nginx แปลกๆ ต้องดักทุกตัวเลยหรอ เราไปดักที่เดียวไม่ได้หรอ**
