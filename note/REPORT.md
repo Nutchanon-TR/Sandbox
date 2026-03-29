@@ -1,0 +1,8 @@
+# Project Progress Report
+
+## Phase 1: Ingress Layer & Gateway Security
+
+**[Add]** `gateway/nginx.conf` => เพื่อจัดการทำ API Gateway (Reverse Proxy) แบ่งเส้นทาง Request ไปหา Frontend (`/`) และ Backend (เช่น `/v1/api/chat/`, `/v1/api/dinner/`, `/v1/api/bpost/`)
+**[Add]** `gateway/Dockerfile` => เพื่อไว้สร้าง Image Nginx โดยฝังไฟล์ `nginx.conf` ตัวใหม่เข้าไปด้วย เตรียมนำขึ้นรัน
+**[Add]** `docker-compose.yml` => เพื่อมัดรวมทุก Service ทั่วทั้งโปรเจกต์ ทั้ง Frontend, Backend ทั้ง 3 ตัว, Nginx, และ Sidecar (OAuth2Proxy) เข้ามาเสกรันทำงานร่วมกันบน Local Network ในคำสั่งเดียว (`docker-compose up`)
+**[Edit]** `note/docs/ROADMAP.md` => เพิ่มการเชื่อมต่อเซอร์วิสใหม่ภาพรวม (B-Post) ลงไปในแผนการเชื่อมต่อ Nginx และระบบติดตาม New Relic
