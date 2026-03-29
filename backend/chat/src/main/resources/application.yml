@@ -37,9 +37,9 @@ app:
       - http://localhost:3000
   api:
     prefix:
-      report: v1/api/report
-      supplier-order: v1/api/supplier-order
-      chat: v1/api/chat
+      b-post: v1/api/b-post
+      dinner: v1/api/dinner
+      chat-app: v1/api/chat-app
   supabase:
     url: https://xabewjiiewyhhjfekazv.supabase.co
     service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}

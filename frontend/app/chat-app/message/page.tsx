@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Send, Phone, Video, MoreVertical } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Avatar, Badge, Button, Input, Space, Typography } from 'antd';
 import Image from 'next/image';
 import { TITLE } from "@/constants/Title";
@@ -10,6 +9,12 @@ import { fetchApi } from '@/utils/api';
 import { API_SANDBOX } from '@/constants/api/ApiSandbox';
 import { useNotification } from '@/context/NotificationContext';
 import { useTheme } from "@/context/ThemeContext";
+import {
+    MoreOutlined,
+    PhoneOutlined,
+    SendOutlined,
+    VideoCameraOutlined,
+} from "@ant-design/icons";
 
 const { Text } = Typography;
 
@@ -24,6 +29,25 @@ interface Message {
     role?: 'AI' | 'USER';
 }
 
+interface ChatResponse {
+    reply: string;
+}
+
+function getErrorMessage(error: unknown, fallbackMessage: string) {
+    if (typeof error === "object" && error !== null && "response" in error) {
+        const response = (error as { response?: { data?: { message?: unknown } } }).response;
+        if (typeof response?.data?.message === "string") {
+            return response.data.message;
+        }
+    }
+
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    return fallbackMessage;
+}
+
 export default function MessagePage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
@@ -36,11 +60,7 @@ export default function MessagePage() {
     // const CURRENT_USER_ID = session?.user?.id ? Number(session.user.id) : 1;
     const CURRENT_USER_ID = 1;
 
-    useChangeTitle(TITLE.MESSAGE, "MESSAGE");
-
-    useEffect(() => {
-        void fetchHistory();
-    }, []);
+    useChangeTitle(TITLE.CHAT_APP, "MESSAGE");
 
     useEffect(() => {
         scrollToBottom();
@@ -50,26 +70,30 @@ export default function MessagePage() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const fetchHistory = async () => {
+    const fetchHistory = useCallback(async () => {
         try {
-            const response = await fetchApi<any[]>(
-                API_SANDBOX.CHAT_HISTORY,
+            const response = await fetchApi<Message[]>(
+                API_SANDBOX.CHAT_APP_HISTORY,
                 {},
                 { roomId: ROOM_ID }
             );
-            const history = response.map((msg: any) => ({
+            const history: Message[] = response.map((msg): Message => ({
                 ...msg,
                 role: msg.senderRole === 'AI' ? 'AI' : 'USER',
             }));
             setMessages(history);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to fetch chat history:', error);
             notification.error({
                 message: 'Error',
-                description: error?.response?.data?.message || error?.message || 'Failed to fetch chat history',
+                description: getErrorMessage(error, 'Failed to fetch chat history'),
             });
         }
-    };
+    }, [notification, ROOM_ID]);
+
+    useEffect(() => {
+        void fetchHistory();
+    }, [fetchHistory]);
 
     const handleSendMessage = async () => {
         if (!inputText.trim() || isLoading) return;
@@ -86,7 +110,7 @@ export default function MessagePage() {
         setIsLoading(true);
 
         try {
-            const response = await fetchApi<any>(API_SANDBOX.CHAT, {
+            const response = await fetchApi<ChatResponse>(API_SANDBOX.CHAT_APP_MESSAGE, {
                 roomId: ROOM_ID,
                 senderId: CURRENT_USER_ID,
                 message: newMsg.content,
@@ -97,11 +121,11 @@ export default function MessagePage() {
                 role: 'AI',
             };
             setMessages((prev) => [...prev, aiMsg]);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to send message:', error);
             notification.error({
                 message: 'Error',
-                description: error?.response?.data?.message || error?.message || 'Failed to send message',
+                description: getErrorMessage(error, 'Failed to send message'),
             });
         } finally {
             setIsLoading(false);
@@ -133,9 +157,9 @@ export default function MessagePage() {
                     </div>
                 </Space>
                 <Space size="small">
-                    <Button type="text" className="!text-slate-500 hover:!bg-slate-100 dark:!text-slate-400 dark:hover:!bg-slate-800" icon={<Phone className="h-5 w-5" />} />
-                    <Button type="text" className="!text-slate-500 hover:!bg-slate-100 dark:!text-slate-400 dark:hover:!bg-slate-800" icon={<Video className="h-5 w-5" />} />
-                    <Button type="text" className="!text-slate-500 hover:!bg-slate-100 dark:!text-slate-400 dark:hover:!bg-slate-800" icon={<MoreVertical className="h-5 w-5" />} />
+                    <Button type="text" className="!text-slate-500 hover:!bg-slate-100 dark:!text-slate-400 dark:hover:!bg-slate-800" icon={<PhoneOutlined />} />
+                    <Button type="text" className="!text-slate-500 hover:!bg-slate-100 dark:!text-slate-400 dark:hover:!bg-slate-800" icon={<VideoCameraOutlined />} />
+                    <Button type="text" className="!text-slate-500 hover:!bg-slate-100 dark:!text-slate-400 dark:hover:!bg-slate-800" icon={<MoreOutlined />} />
                 </Space>
             </div>
 
@@ -226,7 +250,7 @@ export default function MessagePage() {
                         type="primary"
                         shape="circle"
                         size="large"
-                        icon={<Send className="h-4 w-4" />}
+                        icon={<SendOutlined />}
                         onClick={handleSendMessage}
                         disabled={!inputText.trim() || isLoading}
                         className="flex items-center justify-center"

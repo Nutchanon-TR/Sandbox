@@ -12,19 +12,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("${app.api.prefix.chat}")
+@RequestMapping("${app.api.prefix.chat-app}")
 public class ChatController {
 
     @Autowired
     private ChatService chatService;
 
-    @GetMapping("/history/{roomId}")
+    @GetMapping("/message/history/{roomId}")
     public ResponseEntity<List<MessageDto>> getChatHistory(@PathVariable Long roomId) {
         List<MessageDto> history = chatService.getChatHistoryByRoom(roomId);
         return ResponseEntity.ok(history);
     }
 
-    @PostMapping
+    @PostMapping("/message")
     public ResponseEntity<ChatResponseDto> chatWithAi(@RequestBody ChatRequestDto request) {
         String reply = chatService.getAiResponse(request);
         return ResponseEntity.ok(new ChatResponseDto(reply));

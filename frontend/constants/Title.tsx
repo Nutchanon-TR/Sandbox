@@ -1,49 +1,78 @@
 import React from "react";
 import {
-    PieChartOutlined,
-    DesktopOutlined,
-    UserOutlined,
+    CoffeeOutlined,
+    FileTextOutlined,
     HomeOutlined,
-    TeamOutlined,
     MessageOutlined,
-    BuildOutlined,
+    ReadOutlined,
+    RobotOutlined,
+    ShopOutlined,
+    UserOutlined,
 } from "@ant-design/icons";
 import { TitleDetail } from "@/interface/common/TitleDetail";
 
-// 1. Define Sidebar items using the TitleDetail Interface
 export const TITLE: Record<string, TitleDetail> = {
     HOME: {
+        key: "HOME",
         title: "Home",
         urlPath: "/",
         icon: <HomeOutlined />,
     },
     B_POST: {
+        key: "B_POST",
         title: "B-Post",
-        icon: <DesktopOutlined />,
+        icon: <ReadOutlined />,
         subTitles: [
-            { title: "Blog", urlPath: "/b-post/blog", key: "BLOG" },
-            { title: "Message", urlPath: "/b-post/message", key: "MESSAGE" },
+            {
+                key: "BLOG",
+                title: "Blog",
+                urlPath: "/b-post/blog",
+            },
+            {
+                key: "SOCIALS",
+                title: "Socials",
+                urlPath: "/b-post/socials",
+            },
+            {
+                key: "MESSAGES",
+                title: "Messages",
+                urlPath: "/b-post/messages",
+            },
         ],
     },
     DINNER: {
+        key: "DINNER",
         title: "Dinner",
-        icon: <PieChartOutlined />,
+        icon: <CoffeeOutlined />,
         subTitles: [
-            { title: "Supplier", urlPath: "/dinner/supplier", key: "SUPPLIER" },
-            { title: "Profile", urlPath: "/dinner/profile", key: "PROFILE" },
+            {
+                key: "SUPPLIER",
+                title: "Supplier",
+                urlPath: "/dinner/supplier",
+            },
         ],
     },
     CHAT_APP: {
+        key: "CHAT_APP",
         title: "Chat App",
-        icon: <MessageOutlined />,
+        icon: <RobotOutlined />,
         subTitles: [
-            { title: "Message", urlPath: "/chat-app/supplier", key: "SUPPLIER" },
-            { title: "Social", urlPath: "/chat-app/profile", key: "PROFILE" },
+            {
+                key: "MESSAGE",
+                title: "Message",
+                urlPath: "/chat-app/message",
+            },
+            {
+                key: "SOCIAL",
+                title: "Social",
+                urlPath: "/chat-app/social",
+            }
         ],
     },
     PROFILE: {
+        key: "PROFILE",
         title: "Profile",
         urlPath: "/profile",
         icon: <UserOutlined />,
     },
-}
+};

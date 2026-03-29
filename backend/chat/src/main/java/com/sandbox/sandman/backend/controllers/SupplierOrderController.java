@@ -12,16 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.List;
 
 @RestController
-@RequestMapping("${app.api.prefix.supplier-order}")
+@RequestMapping("${app.api.prefix.dinner}")
 @Slf4j
 public class SupplierOrderController {
     @Autowired
     private SupplierOrderService supplierOrderService;
 
-    @GetMapping("/inquiry")
+    @GetMapping("/supplier/inquiry")
     public ResponseEntity<PageResponse<SupplierOrderDto>> AllSupplierOrders(PaginationRequest req) {
         return ResponseEntity.ok(supplierOrderService.getAllSupplierOrders(req));
     }

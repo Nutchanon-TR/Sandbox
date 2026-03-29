@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
-import { Alert, Button, Card, Input, Select, Space, Statistic, Table, Tag, Typography } from "antd";
+import { Alert, Card, Input, Select, Statistic, Table, Tag, Typography } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
-import { CalendarOutlined, ReloadOutlined, ShopOutlined, TruckOutlined, WarningOutlined } from "@ant-design/icons";
+import { CalendarOutlined, ShopOutlined, TruckOutlined, WarningOutlined } from "@ant-design/icons";
 import { TITLE } from "@/constants/Title";
 import { API_SANDBOX } from "@/constants/api/ApiSandbox";
 import { useLoadingContext } from "@/context/LoadingContext";
@@ -95,7 +95,7 @@ export default function SupplierPage() {
     const [keyword, setKeyword] = useState("");
     const deferredKeyword = useDeferredValue(keyword);
 
-    useChangeTitle(TITLE.DASHBOARD, "SUPPLIER");
+    useChangeTitle(TITLE.DINNER, "SUPPLIER");
 
     const fetchSupplierOrders = useCallback(async (nextPage: number, nextPageSize: number, showOverlay = false) => {
         setTableLoading(true);
@@ -104,7 +104,7 @@ export default function SupplierPage() {
         }
 
         try {
-            const response = await fetchApi<PageResponse<SupplierOrder>>(API_SANDBOX.SUPPLIER_ORDER, {
+            const response = await fetchApi<PageResponse<SupplierOrder>>(API_SANDBOX.DINNER_SUPPLIER_ORDER, {
                 page: nextPage,
                 size: nextPageSize,
             });
